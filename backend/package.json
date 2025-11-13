@@ -1,0 +1,22 @@
+{
+  "name": "agendamento-clientes-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=11.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "async-mutex": "^0.3.2",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.10",
+    "express": "^4.19.2",
+    "fs-extra": "^11.2.0",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
+  }
+}

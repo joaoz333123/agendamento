@@ -1,0 +1,25 @@
+{
+  "name": "agendamento-clientes",
+  "version": "1.0.0",
+  "description": "Webpage para agendamento de atendimentos",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=11.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1",
+    "styled-components": "^5.3.11"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "author": "",
+  "license": "MIT"
+}
