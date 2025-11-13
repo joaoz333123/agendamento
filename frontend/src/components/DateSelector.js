@@ -1,0 +1,28 @@
+import React from 'react';
+import { Section, ChipGroup, Chip } from './Layout';
+
+const DateSelector = ({ dates, selectedDate, onSelect }) => (
+  <Section>
+    <h2>Escolha a data</h2>
+    <ChipGroup>
+      {dates.map((date) => {
+        const formatted = new Date(date).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'short',
+          weekday: 'short'
+        });
+        return (
+          <Chip
+            key={date}
+            active={selectedDate === date}
+            onClick={() => onSelect(date)}
+          >
+            {formatted}
+          </Chip>
+        );
+      })}
+    </ChipGroup>
+  </Section>
+);
+
+export default DateSelector;
