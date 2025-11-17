@@ -31,9 +31,11 @@ const GoogleAuth = ({ onLogin }) => {
         if (!credential) return;
         const base64Payload = credential.split('.')[1];
         const decoded = JSON.parse(atob(base64Payload));
-        onLogin({
+        onLogin?.({
           email: decoded.email,
-          name: decoded.name
+          name: decoded.name,
+          picture: decoded.picture,
+          credential
         });
       }
     });

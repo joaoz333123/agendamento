@@ -10,6 +10,8 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import fsExtra from 'fs-extra';
+import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -34,6 +36,20 @@ if (!(await fsExtra.pathExists(DATA_FILE))) {
 }
 
 const mutex = new Mutex();
+
+const allowedAdminEmails = new Set(
+  (process.env.ADMIN_ALLOWED_EMAILS || 'joaozanetti3@gmail.com')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+);
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'defina-um-segredo-seguro';
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID ||
+  process.env.ADMIN_GOOGLE_CLIENT_ID ||
+  process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+  '';
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 const predefinedDates = [
   '2025-11-17',
@@ -226,6 +242,49 @@ function buildAppointmentPayload(payload, previous = null) {
   };
 }
 
+function isAllowedAdminEmail(email = '') {
+  return allowedAdminEmails.has(email.trim().toLowerCase());
+}
+
+async function verifyGoogleCredential(credential) {
+  if (!googleClient || !GOOGLE_CLIENT_ID) {
+    throw new Error('GOOGLE_CLIENT_ID não configurado para autenticação administrativa.');
+  }
+  const ticket = await googleClient.verifyIdToken({
+    idToken: credential,
+    audience: GOOGLE_CLIENT_ID
+  });
+  return ticket.getPayload();
+}
+
+function createAdminToken(email) {
+  return jwt.sign({ email, role: 'admin' }, ADMIN_SESSION_SECRET, { expiresIn: '2h' });
+}
+
+function adminAuthMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Credenciais administrativas ausentes.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, ADMIN_SESSION_SECRET);
+    const email = decoded?.email;
+
+    if (!email || !isAllowedAdminEmail(email)) {
+      return res.status(403).json({ message: 'Acesso administrativo não autorizado.' });
+    }
+
+    req.admin = { email };
+    next();
+  } catch (error) {
+    console.error('Token administrativo inválido:', error.message);
+    return res.status(401).json({ message: 'Sessão administrativa expirada ou inválida.' });
+  }
+}
+
 app.use('/admin', express.static(ADMIN_DIR));
 
 app.get('/api/dates', (_, res) => {
@@ -363,7 +422,29 @@ app.post('/api/reservations/:id/upload', upload.single('arquivo'), async (req, r
   });
 });
 
-app.get('/api/admin/agenda', async (_, res) => {
+app.post('/api/admin/login', async (req, res) => {
+  const { credential } = req.body ?? {};
+  if (!credential) {
+    return res.status(400).json({ message: 'É necessário enviar a credencial do Google.' });
+  }
+
+  try {
+    const payload = await verifyGoogleCredential(credential);
+    const email = payload?.email?.toLowerCase();
+
+    if (!email || !isAllowedAdminEmail(email)) {
+      return res.status(403).json({ message: 'Este e-mail não possui acesso administrativo.' });
+    }
+
+    const token = createAdminToken(email);
+    res.json({ token, user: { email, name: payload?.name ?? '' } });
+  } catch (error) {
+    console.error('Falha na autenticação administrativa:', error);
+    res.status(401).json({ message: 'Não foi possível validar a conta Google fornecida.' });
+  }
+});
+
+app.get('/api/admin/agenda', adminAuthMiddleware, async (_, res) => {
   try {
     let snapshot = { agenda: [], dates: [], slots: predefinedSlots };
     await mutex.runExclusive(async () => {
@@ -378,7 +459,7 @@ app.get('/api/admin/agenda', async (_, res) => {
   }
 });
 
-app.post('/api/admin/agenda', async (req, res) => {
+app.post('/api/admin/agenda', adminAuthMiddleware, async (req, res) => {
   try {
     await mutex.runExclusive(async () => {
       const payload = req.body ?? {};
@@ -430,7 +511,7 @@ app.post('/api/admin/agenda', async (req, res) => {
   }
 });
 
-app.delete('/api/admin/agenda/:id', async (req, res) => {
+app.delete('/api/admin/agenda/:id', adminAuthMiddleware, async (req, res) => {
   try {
     await mutex.runExclusive(async () => {
       let appointments = expireIfNeeded(await readAppointments());

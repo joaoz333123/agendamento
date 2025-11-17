@@ -106,6 +106,39 @@ const LoginModalCard = styled(LoginPrompt)`
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
 `;
 
+const AdminButton = styled.button`
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  z-index: 900;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.5);
+    background: #0f172a;
+  }
+`;
+
+const AdminStatusMessage = styled.p`
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+  color: ${({ $error }) => ($error ? '#f87171' : '#22c55e')};
+`;
+
+const ADMIN_EMAIL = 'joaozanetti3@gmail.com';
+
 const App = () => {
   const [user, setUser] = useState(null);
   const [dates, setDates] = useState([]);
@@ -126,7 +159,14 @@ const App = () => {
   const [feedback, setFeedback] = useState(null);
   const [uploadState, setUploadState] = useState({ loading: false, status: null });
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [adminAccessMessage, setAdminAccessMessage] = useState(null);
   const [pendingReservation, setPendingReservation] = useState(false);
+  const normalizedAdminEmail = ADMIN_EMAIL.toLowerCase();
+  const backendBaseUrl = useMemo(() => {
+    const base = api.defaults.baseURL || 'http://localhost:4000';
+    return base.endsWith('/') ? base.slice(0, -1) : base;
+  }, []);
 
   const resetForm = useCallback(() => {
     setSelectedDate('');
@@ -264,6 +304,41 @@ const App = () => {
     setPendingReservation(false);
   };
 
+  const handleOpenAdminModal = () => {
+    setAdminModalOpen(true);
+    setAdminAccessMessage(null);
+  };
+
+  const handleCloseAdminModal = () => {
+    setAdminModalOpen(false);
+    setAdminAccessMessage(null);
+  };
+
+  const handleAdminLogin = useCallback(async (loggedUser) => {
+    if (!loggedUser?.credential) {
+      setAdminAccessMessage('Não foi possível validar sua conta Google. Tente novamente.');
+      return;
+    }
+    if ((loggedUser.email || '').toLowerCase() !== normalizedAdminEmail) {
+      setAdminAccessMessage('Este e-mail não está autorizado a acessar o painel.');
+      return;
+    }
+    try {
+      setAdminAccessMessage('Validando acesso...');
+      const { data } = await api.post('/api/admin/login', {
+        credential: loggedUser.credential
+      });
+      setAdminAccessMessage(null);
+      setAdminModalOpen(false);
+      const dashboardUrl = `${backendBaseUrl}/admin/agenda.html#token=${encodeURIComponent(data.token)}`;
+      window.open(dashboardUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      const message =
+        error.response?.data?.message || 'Falha ao liberar o painel administrativo.';
+      setAdminAccessMessage(message);
+    }
+  }, [backendBaseUrl, normalizedAdminEmail]);
+
   const handleUpload = async (file) => {
     if (!reservation) return;
     const formDataUpload = new FormData();
@@ -313,8 +388,9 @@ const App = () => {
   };
 
   return (
-    <Page>
-      <TitleBlock>
+    <>
+      <Page>
+        <TitleBlock>
         <HeroCTA>
           <span className="tagline">TZ Engenharia · PMOC</span>
           <h1>Agende a visita técnica</h1>
@@ -453,7 +529,8 @@ const App = () => {
             </Button>
           </>
         )}
-      </Panel>
+        </Panel>
+      </Page>
 
       {loginModalOpen && !user && (
         <LoginModalOverlay onClick={handleCloseLoginModal}>
@@ -465,7 +542,33 @@ const App = () => {
           </LoginModalCard>
         </LoginModalOverlay>
       )}
-    </Page>
+
+      {adminModalOpen && (
+        <LoginModalOverlay onClick={handleCloseAdminModal}>
+          <LoginModalCard onClick={(event) => event.stopPropagation()}>
+            <h3 style={{ margin: 0 }}>Painel administrativo</h3>
+            <p style={{ margin: '4px 0 12px', color: 'var(--gray-500)' }}>
+              Somente {ADMIN_EMAIL} possui acesso autorizado.
+            </p>
+            <GoogleAuth onLogin={handleAdminLogin} />
+            {adminAccessMessage && (
+              <AdminStatusMessage
+                $error={!adminAccessMessage.toLowerCase().includes('validando')}
+              >
+                {adminAccessMessage}
+              </AdminStatusMessage>
+            )}
+            <Button variant="secondary" onClick={handleCloseAdminModal}>
+              Fechar
+            </Button>
+          </LoginModalCard>
+        </LoginModalOverlay>
+      )}
+
+      <AdminButton type="button" onClick={handleOpenAdminModal} aria-label="Abrir painel admin">
+        admin
+      </AdminButton>
+    </>
   );
 };
 

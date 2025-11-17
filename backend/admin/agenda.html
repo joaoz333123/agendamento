@@ -46,6 +46,13 @@
       color: #cbd5f5;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
     .action-primary {
       background: #34d399;
       color: #064e3b;
@@ -357,7 +364,10 @@
       <h1>Agenda - Painel Interno</h1>
       <p>Consulte e ajuste rapidamente tudo o que está salvo no arquivo JSON.</p>
     </div>
-    <button id="refreshButton" class="action-primary" type="button">Atualizar dados</button>
+    <div class="header-actions">
+      <button id="refreshButton" class="action-primary" type="button">Atualizar dados</button>
+      <button id="logoutButton" class="action-primary ghost" type="button">Trocar acesso</button>
+    </div>
   </header>
 
   <main>
@@ -503,10 +513,14 @@
     (() => {
       'use strict';
 
+      const TOKEN_STORAGE_KEY = 'tz-admin-token';
+      const ADMIN_LOGIN_HINT = 'Use o botão "admin" no site principal e faça login com sua conta autorizada.';
+
       const state = {
         agenda: [],
         dates: [],
-        slots: []
+        slots: [],
+        token: null
       };
 
       const tableBody = document.getElementById('agendaTableBody');
@@ -514,12 +528,51 @@
       const statusFilter = document.getElementById('statusFilter');
       const searchFilter = document.getElementById('searchFilter');
       const refreshButton = document.getElementById('refreshButton');
+      const logoutButton = document.getElementById('logoutButton');
       const dialog = document.getElementById('editorDialog');
       const dialogTitle = document.getElementById('dialogTitle');
       const form = document.getElementById('editorForm');
       const formMessage = document.getElementById('formMessage');
       const cancelEditBtn = document.getElementById('cancelEditBtn');
       const toast = document.getElementById('toast');
+
+      function captureTokenFromHash() {
+        const hash = window.location.hash.replace(/^#/, '');
+        const params = new URLSearchParams(hash);
+        const token = params.get('token');
+        if (token) {
+          sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+          const cleanUrl = window.location.pathname + window.location.search;
+          window.history.replaceState(null, '', cleanUrl);
+          return token;
+        }
+        return null;
+      }
+
+      function restoreToken() {
+        return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+      }
+
+      function clearToken() {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        state.token = null;
+      }
+
+      function ensureAuthorized(showAlert = false) {
+        if (state.token) return true;
+        setTableMessage(`Acesso restrito. ${ADMIN_LOGIN_HINT}`);
+        if (showAlert) {
+          showToast('Acesso restrito. Abra o painel pelo botão "admin".', true);
+        }
+        return false;
+      }
+
+      function handleUnauthorized() {
+        clearToken();
+        ensureAuthorized(true);
+      }
+
+      state.token = captureTokenFromHash() || restoreToken();
 
       function formatDate(dateStr) {
         if (!dateStr) return '-';
@@ -594,9 +647,18 @@
       }
 
       async function loadAgenda() {
+        if (!ensureAuthorized()) return;
         setTableMessage('Carregando agenda...');
         try {
-          const response = await fetch('/api/admin/agenda');
+          const response = await fetch('/api/admin/agenda', {
+            headers: {
+              Authorization: `Bearer ${state.token}`
+            }
+          });
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            return;
+          }
           if (!response.ok) {
             throw new Error('Falha ao carregar');
           }
@@ -772,6 +834,10 @@
 
       async function submitForm(event) {
         event.preventDefault();
+        if (!ensureAuthorized(true)) {
+          formMessage.textContent = 'Acesso expirado. Abra novamente pelo botão "admin".';
+          return;
+        }
         formMessage.textContent = '';
         const formData = new FormData(form);
         const payload = {
@@ -800,9 +866,18 @@
         try {
           const response = await fetch('/api/admin/agenda', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${state.token}`
+            },
             body: JSON.stringify(payload)
           });
+
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            formMessage.textContent = 'Sessão expirada. Abra novamente pelo botão "admin".';
+            return;
+          }
 
           if (!response.ok) {
             const errorPayload = await response.json().catch(() => ({}));
@@ -829,11 +904,23 @@
 
       async function handleDelete(id) {
         if (!id) return;
+        if (!ensureAuthorized(true)) return;
         const confirmed = window.confirm('Confirma liberar este horário e remover o registro do JSON?');
         if (!confirmed) return;
 
         try {
-          const response = await fetch(`/api/admin/agenda/${id}`, { method: 'DELETE' });
+          const response = await fetch(`/api/admin/agenda/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${state.token}`
+            }
+          });
+
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            return;
+          }
+
           if (!response.ok) {
             const payload = await response.json().catch(() => ({}));
             throw new Error(payload.message || 'Erro ao remover agendamento.');
@@ -872,12 +959,22 @@
         }, 3500);
       }
 
+      function logoutFromPanel() {
+        clearToken();
+        state.agenda = [];
+        state.dates = [];
+        state.slots = [];
+        setTableMessage(`Sessão encerrada. ${ADMIN_LOGIN_HINT}`);
+        showToast('Sessão encerrada.');
+      }
+
       dateFilter.addEventListener('change', renderTable);
       statusFilter.addEventListener('change', renderTable);
       searchFilter.addEventListener('input', () => {
         renderTable();
       });
       refreshButton.addEventListener('click', loadAgenda);
+      logoutButton.addEventListener('click', logoutFromPanel);
       tableBody.addEventListener('click', handleTableClick);
       form.addEventListener('submit', submitForm);
       cancelEditBtn.addEventListener('click', closeDialog);
@@ -886,7 +983,11 @@
         closeDialog();
       });
 
-      loadAgenda();
+      if (state.token) {
+        loadAgenda();
+      } else {
+        ensureAuthorized();
+      }
     })();
   </script>
 </body>
