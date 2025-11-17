@@ -29,3 +29,6 @@ Thumbs.db
 # Misc temp files
 tmp/
 *.tmp
+
+# Uploaded assets
+backend/uploads/
