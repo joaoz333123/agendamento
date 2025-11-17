@@ -37,16 +37,16 @@ const ErrorList = styled.div`
 
 const FormFields = ({ formData, onChange, errors }) => {
   const shoppings = [
-    'Shopping Centro',
-    'Shopping Leste',
-    'Shopping Norte',
-    'Shopping Sul',
-    'Shopping Oeste'
+    'Shopping Estação',
+    'Shopping Curitiba',
+    'Shopping Palladium',
+    'ParkShopping Barigui',
+    'Shopping Jockey'
   ];
 
   return (
     <Section>
-      <h2>Detalhes da operação</h2>
+      <h2>Dados da visita</h2>
       <FieldsGrid>
         <Select
           value={formData.shopping}
@@ -81,12 +81,12 @@ const FormFields = ({ formData, onChange, errors }) => {
         />
         <NoteWrapper>
           <TextArea
-            placeholder="Informações adicionais para nossa equipe..."
+            placeholder="Observações do sistema (capacidade, acesso, etc.)"
             maxLength={200}
             value={formData.informacoes_adicionais}
             onChange={(e) => onChange('informacoes_adicionais', e.target.value)}
           />
-          <small>Opcional · limite de 200 caracteres.</small>
+          <small>Opcional · máximo de 200 caracteres.</small>
         </NoteWrapper>
       </FieldsGrid>
 

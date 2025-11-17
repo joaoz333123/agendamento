@@ -41,8 +41,8 @@ const UploadArea = ({ onUpload, loading, status }) => {
 
   return (
     <Section>
-      <h2>Envie o material</h2>
-      <p>Arquivos em PDF ou imagem, até 4 MB. Apenas um arquivo por agendamento.</p>
+      <h2>Documentos da visita</h2>
+      <p>Envie laudos, plantas ou checklists (PDF ou imagem de até 4 MB).</p>
 
       <ActionsRow>
         <Button variant="secondary" onClick={() => inputRef.current.click()}>
