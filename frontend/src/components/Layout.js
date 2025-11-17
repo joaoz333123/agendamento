@@ -1,52 +1,55 @@
 import styled from 'styled-components';
 
 export const Page = styled.div`
-  background: rgba(20, 22, 24, 0.82);
-  border-radius: 24px;
-  padding: 32px 40px;
-  width: min(960px, 90vw);
+  width: min(1200px, 96vw);
+  min-height: 680px;
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 32px 36px;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 32px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
-
-  @media (max-width: 920px) {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 24px;
-  }
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 40px;
+  box-shadow: 0 25px 70px rgba(16, 24, 40, 0.1);
+  border: 1px solid var(--border-soft);
 `;
 
 export const TitleBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 20px;
 
   h1 {
-    font-size: 2.2rem;
-    margin: 0;
-    color: var(--accent-light);
+    font-size: 3.1rem;
+    margin: 8px 0;
+    color: var(--gray-900);
+    line-height: 1.1;
   }
 
   p {
-    color: var(--gray-300);
+    color: var(--gray-500);
     margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
   .tagline {
-    color: #fff;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    color: var(--hero-blue);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
   }
 `;
 
 export const Panel = styled.div`
-  background: rgba(35, 37, 39, 0.7);
-  border-radius: 20px;
-  padding: 24px;
+  background: #f8fbff;
+  border-radius: 24px;
+  padding: 24px 26px;
+  border: 1px solid var(--border-soft);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 `;
 
 export const Section = styled.div`
@@ -57,80 +60,70 @@ export const Section = styled.div`
   h2 {
     margin: 0;
     font-size: 1rem;
-    color: var(--gray-300);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    color: var(--gray-900);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    color: var(--gray-500);
+    font-size: 0.95rem;
   }
 `;
 
 export const Button = styled.button`
   background: ${({ variant }) =>
-    variant === 'secondary' ? 'transparent' : 'var(--accent)'};
-  color: ${({ variant }) => (variant === 'secondary' ? 'var(--accent-light)' : '#fff')};
-  border: ${({ variant }) => (variant === 'secondary' ? '1px solid var(--accent-light)' : 'none')};
+    variant === 'secondary' ? '#ffffff' : 'var(--cta-blue)'};
+  color: ${({ variant }) => (variant === 'secondary' ? 'var(--cta-blue)' : '#fff')};
+  border: ${({ variant }) =>
+    variant === 'secondary' ? '1px solid var(--cta-blue)' : '1px solid transparent'};
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 12px 20px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
-  opacity: ${({ disabled }) => (disabled ? 0.4 : 1)};
-  transition: 0.2s ease;
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+  transition: background 0.15s ease;
 
   &:hover {
-    transform: ${({ disabled }) => (disabled ? 'none' : 'translateY(-1px)')};
-    box-shadow: ${({ disabled }) =>
-      disabled ? 'none' : '0 10px 22px rgba(79, 110, 247, 0.25)'};
+    background: ${({ variant, disabled }) =>
+      disabled ? undefined : variant === 'secondary' ? '#f0f6ff' : 'var(--cta-blue-dark)'};
   }
 `;
 
-export const Input = styled.input`
+const inputStyles = `
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #fff;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--gray-900);
   outline: none;
   font-size: 0.95rem;
   width: 100%;
 
-  &:focus {
-    border-color: var(--accent-light);
-    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
+  &::placeholder {
+    color: var(--gray-300);
   }
+
+  &:focus {
+    border-color: var(--cta-blue);
+    box-shadow: 0 0 0 1px rgba(28, 127, 242, 0.2);
+  }
+`;
+
+export const Input = styled.input`
+  ${inputStyles}
 `;
 
 export const Select = styled.select`
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  outline: none;
-  font-size: 0.95rem;
-
-  option { color: #000; }
-
-  &:focus {
-    border-color: var(--accent-light);
-    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
-  }
+  ${inputStyles}
+  appearance: none;
 `;
 
 export const TextArea = styled.textarea`
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  min-height: 80px;
-  resize: vertical;
-  font-size: 0.95rem;
-  outline: none;
-
-  &:focus {
-    border-color: var(--accent-light);
-    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
-  }
+  ${inputStyles}
+  min-height: 90px;
+  resize: none;
 `;
 
 export const ChipGroup = styled.div`
@@ -140,27 +133,41 @@ export const ChipGroup = styled.div`
 `;
 
 export const Chip = styled.button`
-  background: ${({ active }) => (active ? 'var(--accent)' : 'rgba(255,255,255,0.06)')};
-  color: ${({ active }) => (active ? '#fff' : 'var(--gray-300)')};
-  border: ${({ active }) => (active ? '1px solid var(--accent-light)' : '1px solid transparent')};
-  border-radius: 20px;
-  padding: 10px 16px;
+  background: ${({ active, disabled }) =>
+    disabled ? '#f2f4f7' : active ? 'var(--cta-blue)' : '#ffffff'};
+  color: ${({ active, disabled }) =>
+    disabled ? 'var(--gray-300)' : active ? '#fff' : 'var(--gray-500)'};
+  border: 1px solid
+    ${({ active, disabled }) =>
+      disabled ? 'var(--border-soft)' : active ? 'var(--cta-blue)' : 'var(--border-soft)'};
+  border-radius: 999px;
+  padding: 8px 16px;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: 0.2s ease;
-
-  &:hover {
-    background: ${({ active }) => (active ? 'var(--accent)' : 'rgba(255,255,255,0.12)')};
-  }
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${({ disabled }) => (disabled ? 0.7 : 1)};
 `;
 
 export const Feedback = styled.div`
   padding: 12px 14px;
   border-radius: 12px;
   background: ${({ type }) =>
-    type === 'error' ? 'rgba(231, 111, 81, 0.15)' : 'rgba(42, 157, 143, 0.15)'};
-  color: ${({ type }) => (type === 'error' ? '#ffb4a2' : '#a5ffd6')};
-  border: 1px solid ${({ type }) =>
-    type === 'error' ? 'rgba(231, 111, 81, 0.45)' : 'rgba(42, 157, 143, 0.45)'};
+    type === 'error'
+      ? 'rgba(235, 87, 87, 0.1)'
+      : type === 'success'
+      ? 'rgba(76, 175, 80, 0.1)'
+      : '#eef2ff'};
+  color: ${({ type }) =>
+    type === 'error'
+      ? '#b42318'
+      : type === 'success'
+      ? '#0f6c3e'
+      : '#1c7ff2'};
+  border: 1px solid
+    ${({ type }) =>
+      type === 'error'
+        ? 'rgba(235, 87, 87, 0.3)'
+        : type === 'success'
+        ? 'rgba(76, 175, 80, 0.3)'
+        : 'rgba(28, 127, 242, 0.3)'};
   font-size: 0.9rem;
 `;
