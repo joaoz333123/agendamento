@@ -30,7 +30,13 @@ checklist.md
    cd frontend
    npm install
    ```
-2. Defina `REACT_APP_GOOGLE_CLIENT_ID` em um arquivo `.env` (opcional) para o login Google.
+2. Configure o login Google:
+   - Crie uma credencial OAuth 2.0 (aplicativo Web) no [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Informe `http://localhost:3000` nos "Origens JavaScript autorizadas" durante o desenvolvimento e adicione a URL que for servir o build (`http://localhost:8080`, domínio final, etc.) antes do deploy.
+   - Copie o **Client ID** e salve em `frontend/.env.local` (ou `.env`) como:
+     ```bash
+     REACT_APP_GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+     ```
+   - Refaça o build (`npm start` ou `npm run build`) sempre que alterar esse valor.
 3. Execute o aplicativo:
    ```bash
    npm start
