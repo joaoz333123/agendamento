@@ -24,23 +24,26 @@ app.use(express.json());
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'agendamentos.json');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const ADMIN_DIR = path.join(__dirname, 'admin');
 
 await fsExtra.ensureDir(DATA_DIR);
 await fsExtra.ensureDir(UPLOAD_DIR);
+await fsExtra.ensureDir(ADMIN_DIR);
 if (!(await fsExtra.pathExists(DATA_FILE))) {
   await fs.writeFile(DATA_FILE, JSON.stringify([], null, 2));
 }
 
 const mutex = new Mutex();
 
-const predefinedDates = Array.from({ length: 10 }).map((_, idx) =>
-  dayjs().tz('America/Sao_Paulo').add(idx + 1, 'day').format('YYYY-MM-DD')
-);
-const predefinedSlots = [
-  '09:00', '10:00', '11:00',
-  '13:00', '14:00', '15:00',
-  '16:00', '17:00'
+const predefinedDates = [
+  '2025-11-17',
+  '2025-11-18',
+  '2025-11-19',
+  '2025-11-20',
+  '2025-11-21'
 ];
+const predefinedSlots = ['13:00', '14:00', '15:00', '16:00', '17:00'];
+const adminStatuses = new Set(['aguardando_upload', 'reservado', 'cancelado']);
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, UPLOAD_DIR),
@@ -80,6 +83,150 @@ function expireIfNeeded(appointments) {
     return appt;
   });
 }
+
+function buildAgendaSnapshot(appointments) {
+  const appointmentsByKey = new Map();
+  appointments.forEach((appt) => {
+    appointmentsByKey.set(`${appt.data}|${appt.horario}`, appt);
+  });
+
+  const uniqueDates = Array.from(new Set([
+    ...predefinedDates,
+    ...appointments.map((appt) => appt.data)
+  ])).sort();
+
+  const agenda = [];
+
+  uniqueDates.forEach((date) => {
+    const slotsForDate = new Set(predefinedSlots);
+    appointments
+      .filter((appt) => appt.data === date)
+      .forEach((appt) => slotsForDate.add(appt.horario));
+
+    Array.from(slotsForDate).sort().forEach((slot) => {
+      const key = `${date}|${slot}`;
+      if (appointmentsByKey.has(key)) {
+        agenda.push(appointmentsByKey.get(key));
+        return;
+      }
+
+      agenda.push({
+        id: null,
+        data: date,
+        horario: slot,
+        shopping: '',
+        nome_fantasia: '',
+        nome_contato: '',
+        telefone_whatsapp: '',
+        email: '',
+        informacoes_adicionais: '',
+        status: 'disponivel',
+        upload_arquivo: {
+          url: null,
+          tipo: null,
+          tamanho_mb: null
+        },
+        data_hora_reserva: null,
+        expira_em: null
+      });
+    });
+  });
+
+  return {
+    agenda,
+    dates: uniqueDates,
+    slots: predefinedSlots
+  };
+}
+
+function sanitizeStatus(status) {
+  if (status && adminStatuses.has(status)) {
+    return status;
+  }
+  return 'aguardando_upload';
+}
+
+function normalizeString(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+}
+
+function normalizeUploadPayload(payloadUpload = {}, previousUpload = {}) {
+  const normalized = {
+    url: payloadUpload.url ?? payloadUpload.upload_url ?? previousUpload.url ?? null,
+    tipo: payloadUpload.tipo ?? previousUpload.tipo ?? null,
+    tamanho_mb: previousUpload.tamanho_mb ?? null
+  };
+
+  const rawSize = payloadUpload.tamanho_mb ?? payloadUpload.upload_tamanho_mb;
+  if (typeof rawSize === 'number' && Number.isFinite(rawSize)) {
+    normalized.tamanho_mb = +rawSize;
+  } else if (typeof rawSize === 'string' && rawSize.trim() !== '') {
+    const parsed = Number(rawSize);
+    if (!Number.isNaN(parsed)) {
+      normalized.tamanho_mb = +parsed;
+    }
+  }
+
+  return normalized;
+}
+
+function buildAppointmentPayload(payload, previous = null) {
+  const now = dayjs().utc();
+  const base = previous ?? {
+    id: uuidv4(),
+    upload_arquivo: {
+      url: null,
+      tipo: null,
+      tamanho_mb: null
+    },
+    data_hora_reserva: now.toISOString(),
+    expira_em: now.add(24, 'hour').toISOString()
+  };
+
+  const infoAdicional = normalizeString(payload.informacoes_adicionais || '');
+
+  const dataHoraReserva = payload.data_hora_reserva
+    ? dayjs(payload.data_hora_reserva).isValid()
+      ? dayjs(payload.data_hora_reserva).toISOString()
+      : base.data_hora_reserva
+    : base.data_hora_reserva;
+
+  const expiraEm = payload.expira_em
+    ? dayjs(payload.expira_em).isValid()
+      ? dayjs(payload.expira_em).toISOString()
+      : base.expira_em
+    : base.expira_em;
+
+  const previousUpload = previous?.upload_arquivo ?? base.upload_arquivo;
+
+  return {
+    ...base,
+    data: payload.data,
+    horario: payload.horario,
+    shopping: normalizeString(payload.shopping || ''),
+    nome_fantasia: normalizeString(payload.nome_fantasia || ''),
+    nome_contato: normalizeString(payload.nome_contato || ''),
+    telefone_whatsapp: normalizeString(payload.telefone_whatsapp || ''),
+    email: normalizeString(payload.email || ''),
+    informacoes_adicionais: infoAdicional.slice(0, 200),
+    status: sanitizeStatus(payload.status || previous?.status),
+    upload_arquivo: normalizeUploadPayload(
+      payload.upload_arquivo ?? {
+        url: payload.upload_url,
+        tipo: payload.upload_tipo,
+        tamanho_mb: payload.upload_tamanho_mb
+      },
+      previousUpload
+    ),
+    data_hora_reserva: dataHoraReserva,
+    expira_em: expiraEm
+  };
+}
+
+app.use('/admin', express.static(ADMIN_DIR));
 
 app.get('/api/dates', (_, res) => {
   res.json({ dates: predefinedDates });
@@ -214,6 +361,97 @@ app.post('/api/reservations/:id/upload', upload.single('arquivo'), async (req, r
     await writeAppointments(appointments);
     res.json({ message: 'Upload concluído com sucesso.' });
   });
+});
+
+app.get('/api/admin/agenda', async (_, res) => {
+  try {
+    let snapshot = { agenda: [], dates: [], slots: predefinedSlots };
+    await mutex.runExclusive(async () => {
+      const appointments = expireIfNeeded(await readAppointments());
+      await writeAppointments(appointments);
+      snapshot = buildAgendaSnapshot(appointments);
+    });
+    res.json(snapshot);
+  } catch (error) {
+    console.error('Erro ao carregar agenda administrativa:', error);
+    res.status(500).json({ message: 'Erro ao carregar agenda.' });
+  }
+});
+
+app.post('/api/admin/agenda', async (req, res) => {
+  try {
+    await mutex.runExclusive(async () => {
+      const payload = req.body ?? {};
+      if (!payload.data || !payload.horario) {
+        res.status(400).json({ message: 'Campos data e horário são obrigatórios.' });
+        return;
+      }
+
+      let appointments = expireIfNeeded(await readAppointments());
+
+      if (payload.id) {
+        const idx = appointments.findIndex((appt) => appt.id === payload.id);
+        if (idx === -1) {
+          res.status(404).json({ message: 'Agendamento não encontrado.' });
+          return;
+        }
+
+        const updated = buildAppointmentPayload(payload, appointments[idx]);
+        appointments[idx] = updated;
+
+        await writeAppointments(appointments);
+        res.json({ appointment: updated });
+        return;
+      }
+
+      const existsActive = appointments.some(
+        (appt) =>
+          appt.data === payload.data &&
+          appt.horario === payload.horario &&
+          appt.status !== 'cancelado'
+      );
+
+      if (existsActive) {
+        res.status(409).json({ message: 'Já existe um agendamento ativo para este horário.' });
+        return;
+      }
+
+      const created = buildAppointmentPayload(payload, null);
+      appointments.push(created);
+
+      await writeAppointments(appointments);
+      res.status(201).json({ appointment: created });
+    });
+  } catch (error) {
+    console.error('Erro ao salvar agendamento administrativo:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Erro ao salvar agendamento.' });
+    }
+  }
+});
+
+app.delete('/api/admin/agenda/:id', async (req, res) => {
+  try {
+    await mutex.runExclusive(async () => {
+      let appointments = expireIfNeeded(await readAppointments());
+      const { id } = req.params;
+      const initialLength = appointments.length;
+      appointments = appointments.filter((appt) => appt.id !== id);
+
+      if (appointments.length === initialLength) {
+        res.status(404).json({ message: 'Agendamento não encontrado.' });
+        return;
+      }
+
+      await writeAppointments(appointments);
+      res.json({ message: 'Agendamento removido com sucesso.' });
+    });
+  } catch (error) {
+    console.error('Erro ao remover agendamento administrativo:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Erro ao remover agendamento.' });
+    }
+  }
 });
 
 app.use('/uploads', express.static(UPLOAD_DIR));

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel Interno da Agenda</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      color: #0f172a;
+      background-color: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+
+    .app-header {
+      padding: 1.5rem 2rem;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.3);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .app-header p {
+      margin: 0.2rem 0 0;
+      font-size: 0.95rem;
+      color: #cbd5f5;
+    }
+
+    .action-primary {
+      background: #34d399;
+      color: #064e3b;
+      border: none;
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(52, 211, 153, 0.35);
+    }
+
+    .action-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(52, 211, 153, 0.45);
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      width: min(1400px, 100%);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .filters {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 1rem 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      box-shadow: 0 20px 45px rgba(51, 65, 85, 0.15);
+    }
+
+    .filters label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .filters select,
+    .filters input {
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.75rem;
+      border: 1px solid #cbd5f5;
+      background: #fff;
+      font-size: 1rem;
+      color: #0f172a;
+      transition: border 0.2s;
+    }
+
+    .filters select:focus,
+    .filters input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+
+    .table-wrapper {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1.2rem;
+      padding: 0;
+      box-shadow: 0 24px 64px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    thead {
+      background: linear-gradient(90deg, #0f172a 0%, #312e81 100%);
+      color: #f8fafc;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.85rem 0.75rem;
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: rgba(99, 102, 241, 0.06);
+    }
+
+    td {
+      padding: 0.85rem 0.75rem;
+      color: #0f172a;
+      vertical-align: top;
+    }
+
+    td.small {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .status-disponivel {
+      background: #ecfccb;
+      color: #365314;
+    }
+
+    .status-aguardando_upload {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-reservado {
+      background: #dcfce7;
+      color: #14532d;
+    }
+
+    .status-cancelado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .action-btn.edit-btn {
+      background: #312e81;
+      color: #f8fafc;
+      box-shadow: 0 8px 20px rgba(49, 46, 129, 0.35);
+    }
+
+    .action-btn.delete-btn {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .table-empty {
+      text-align: center;
+      padding: 2rem !important;
+      color: #475569;
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    dialog {
+      border: none;
+      border-radius: 1.2rem;
+      padding: 0;
+      width: min(720px, 90%);
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
+      overflow: hidden;
+    }
+
+    .dialog-head {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 1.2rem 1.5rem;
+    }
+
+    .dialog-body {
+      background: #fff;
+      padding: 1.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .form-control input,
+    .form-control select,
+    .form-control textarea {
+      border: 1px solid #cbd5f5;
+      border-radius: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+      color: #0f172a;
+      background: #fff;
+      min-height: 44px;
+    }
+
+    .form-control textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    .form-control input:focus,
+    .form-control select:focus,
+    .form-control textarea:focus {
+      outline: 2px solid #818cf8;
+      border-color: #6366f1;
+    }
+
+    .form-control input[readonly] {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    .form-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .ghost {
+      background: transparent;
+      border: 1px solid #cbd5f5;
+      color: #475569;
+    }
+
+    .form-message {
+      font-size: 0.9rem;
+      color: #dc2626;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      background: #0f172a;
+      opacity: 0;
+      transform: translateY(40px);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.4);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      th:nth-child(7),
+      td:nth-child(7),
+      th:nth-child(8),
+      td:nth-child(8) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Agenda - Painel Interno</h1>
+      <p>Consulte e ajuste rapidamente tudo o que está salvo no arquivo JSON.</p>
+    </div>
+    <button id="refreshButton" class="action-primary" type="button">Atualizar dados</button>
+  </header>
+
+  <main>
+    <section class="filters">
+      <label>
+        Data
+        <select id="dateFilter">
+          <option value="">Todas</option>
+        </select>
+      </label>
+      <label>
+        Status
+        <select id="statusFilter">
+          <option value="">Todos</option>
+          <option value="disponivel">Disponível</option>
+          <option value="aguardando_upload">Aguardando Upload</option>
+          <option value="reservado">Reservado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </label>
+      <label>
+        Buscar
+        <input
+          id="searchFilter"
+          type="search"
+          placeholder="Nome fantasia, contato, telefone ou e-mail"
+        />
+      </label>
+    </section>
+
+    <section class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Status</th>
+            <th>Shopping / Loja</th>
+            <th>Contato</th>
+            <th>Telefone</th>
+            <th>E-mail</th>
+            <th>Informações</th>
+            <th>Upload</th>
+            <th>Reservado em</th>
+            <th>Expira em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="agendaTableBody">
+          <tr>
+            <td colspan="12" class="table-empty">Carregando agenda...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <dialog id="editorDialog">
+    <div class="dialog-head">
+      <h2 id="dialogTitle" style="margin: 0; font-size: 1.2rem;">Editar agendamento</h2>
+    </div>
+    <div class="dialog-body">
+      <form id="editorForm">
+        <input type="hidden" name="id" />
+        <input type="hidden" name="rowKey" />
+        <div class="form-grid">
+          <label class="form-control">
+            Data
+            <input name="data" type="date" readonly required />
+          </label>
+          <label class="form-control">
+            Horário
+            <input name="horario" type="text" readonly required />
+          </label>
+          <label class="form-control">
+            Status
+            <select name="status" required>
+              <option value="aguardando_upload">Aguardando upload</option>
+              <option value="reservado">Reservado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </label>
+          <label class="form-control">
+            Shopping
+            <input name="shopping" type="text" />
+          </label>
+          <label class="form-control">
+            Nome fantasia
+            <input name="nome_fantasia" type="text" />
+          </label>
+          <label class="form-control">
+            Nome do contato
+            <input name="nome_contato" type="text" />
+          </label>
+          <label class="form-control">
+            Telefone / WhatsApp
+            <input name="telefone_whatsapp" type="text" />
+          </label>
+          <label class="form-control">
+            E-mail
+            <input name="email" type="email" />
+          </label>
+          <label class="form-control" style="grid-column: 1 / -1;">
+            Informações adicionais
+            <textarea name="informacoes_adicionais" maxlength="200"></textarea>
+          </label>
+          <label class="form-control">
+            Upload (URL)
+            <input name="upload_url" type="text" />
+          </label>
+          <label class="form-control">
+            Upload (tipo)
+            <input name="upload_tipo" type="text" placeholder="pdf, imagem..." />
+          </label>
+          <label class="form-control">
+            Upload (MB)
+            <input name="upload_tamanho_mb" type="number" min="0" step="0.01" />
+          </label>
+          <label class="form-control">
+            Data/hora da reserva
+            <input name="data_hora_reserva" type="datetime-local" />
+          </label>
+          <label class="form-control">
+            Expira em
+            <input name="expira_em" type="datetime-local" />
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <span id="formMessage" class="form-message"></span>
+          <div style="display: flex; gap: 0.6rem;">
+            <button type="button" id="cancelEditBtn" class="action-btn ghost">Cancelar</button>
+            <button type="submit" class="action-btn edit-btn">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const state = {
+        agenda: [],
+        dates: [],
+        slots: []
+      };
+
+      const tableBody = document.getElementById('agendaTableBody');
+      const dateFilter = document.getElementById('dateFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      const searchFilter = document.getElementById('searchFilter');
+      const refreshButton = document.getElementById('refreshButton');
+      const dialog = document.getElementById('editorDialog');
+      const dialogTitle = document.getElementById('dialogTitle');
+      const form = document.getElementById('editorForm');
+      const formMessage = document.getElementById('formMessage');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const toast = document.getElementById('toast');
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      }
+
+      function formatDateTime(value) {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '-';
+        return date.toLocaleString('pt-BR', {
+          dateStyle: 'short',
+          timeStyle: 'short'
+        });
+      }
+
+      function toInputDateTime(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      }
+
+      function statusLabel(status) {
+        const map = {
+          disponivel: 'Disponível',
+          aguardando_upload: 'Aguardando upload',
+          reservado: 'Reservado',
+          cancelado: 'Cancelado'
+        };
+        return map[status] ?? status;
+      }
+
+      function setTableMessage(message) {
+        tableBody.innerHTML = '';
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 12;
+        cell.className = 'table-empty';
+        cell.textContent = message;
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+      }
+
+      function populateDateFilter(selected) {
+        const currentValue = selected ?? dateFilter.value ?? '';
+        dateFilter.innerHTML = '<option value="">Todas</option>';
+        state.dates.forEach((date) => {
+          const option = document.createElement('option');
+          option.value = date;
+          option.textContent = formatDate(date);
+          dateFilter.appendChild(option);
+        });
+
+        if (currentValue && state.dates.includes(currentValue)) {
+          dateFilter.value = currentValue;
+        }
+      }
+
+      function hydrateAgenda(list) {
+        return list.map((item) => ({
+          ...item,
+          rowKey: `${item.data}|${item.horario}`,
+          upload_arquivo: item.upload_arquivo ?? {
+            url: null,
+            tipo: null,
+            tamanho_mb: null
+          }
+        }));
+      }
+
+      async function loadAgenda() {
+        setTableMessage('Carregando agenda...');
+        try {
+          const response = await fetch('/api/admin/agenda');
+          if (!response.ok) {
+            throw new Error('Falha ao carregar');
+          }
+          const payload = await response.json();
+          state.agenda = hydrateAgenda(payload.agenda ?? []);
+          state.dates = payload.dates ?? [];
+          state.slots = payload.slots ?? [];
+          populateDateFilter();
+          renderTable();
+          showToast('Agenda atualizada');
+        } catch (error) {
+          console.error(error);
+          setTableMessage('Não foi possível carregar os dados neste momento.');
+          showToast('Erro ao buscar dados', true);
+        }
+      }
+
+      function applyFilters(row) {
+        if (dateFilter.value && row.data !== dateFilter.value) return false;
+        if (statusFilter.value && row.status !== statusFilter.value) return false;
+        const query = searchFilter.value.trim().toLowerCase();
+        if (!query) return true;
+        const searchable = [
+          row.shopping,
+          row.nome_fantasia,
+          row.nome_contato,
+          row.telefone_whatsapp,
+          row.email
+        ]
+          .join(' ')
+          .toLowerCase();
+        return searchable.includes(query);
+      }
+
+      function renderTable() {
+        const rows = state.agenda
+          .slice()
+          .sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario))
+          .filter(applyFilters);
+
+        if (!rows.length) {
+          setTableMessage('Nenhum registro encontrado para os filtros selecionados.');
+          return;
+        }
+
+        tableBody.innerHTML = '';
+
+        rows.forEach((item) => {
+          const tr = document.createElement('tr');
+          tr.dataset.rowKey = item.rowKey;
+
+          const dateCell = document.createElement('td');
+          dateCell.textContent = formatDate(item.data);
+          tr.appendChild(dateCell);
+
+          const timeCell = document.createElement('td');
+          timeCell.textContent = item.horario;
+          tr.appendChild(timeCell);
+
+          const statusCell = document.createElement('td');
+          const chip = document.createElement('span');
+          chip.className = `status-chip status-${item.status}`;
+          chip.textContent = statusLabel(item.status);
+          statusCell.appendChild(chip);
+          tr.appendChild(statusCell);
+
+          const shoppingCell = document.createElement('td');
+          const shoppingName = document.createElement('div');
+          shoppingName.style.fontWeight = '600';
+          shoppingName.textContent = item.shopping || '-';
+          const loja = document.createElement('div');
+          loja.className = 'small';
+          loja.textContent = item.nome_fantasia || '-';
+          shoppingCell.appendChild(shoppingName);
+          shoppingCell.appendChild(loja);
+          tr.appendChild(shoppingCell);
+
+          const contatoCell = document.createElement('td');
+          contatoCell.textContent = item.nome_contato || '-';
+          tr.appendChild(contatoCell);
+
+          const telefoneCell = document.createElement('td');
+          telefoneCell.textContent = item.telefone_whatsapp || '-';
+          tr.appendChild(telefoneCell);
+
+          const emailCell = document.createElement('td');
+          emailCell.textContent = item.email || '-';
+          tr.appendChild(emailCell);
+
+          const infoCell = document.createElement('td');
+          infoCell.textContent = item.informacoes_adicionais || '-';
+          tr.appendChild(infoCell);
+
+          const uploadCell = document.createElement('td');
+          const upload = item.upload_arquivo || {};
+          if (upload.url) {
+            const link = document.createElement('a');
+            link.href = upload.url;
+            link.target = '_blank';
+            link.rel = 'noreferrer';
+            link.textContent = upload.tipo ? upload.tipo.toUpperCase() : 'Arquivo';
+            uploadCell.appendChild(link);
+            if (upload.tamanho_mb) {
+              const span = document.createElement('span');
+              span.className = 'small';
+              span.textContent = ` (${upload.tamanho_mb} MB)`;
+              uploadCell.appendChild(span);
+            }
+          } else {
+            uploadCell.textContent = '-';
+          }
+          tr.appendChild(uploadCell);
+
+          const reservaCell = document.createElement('td');
+          reservaCell.textContent = formatDateTime(item.data_hora_reserva);
+          tr.appendChild(reservaCell);
+
+          const expiraCell = document.createElement('td');
+          expiraCell.textContent = formatDateTime(item.expira_em);
+          tr.appendChild(expiraCell);
+
+          const actionCell = document.createElement('td');
+          actionCell.className = 'actions';
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'action-btn edit-btn';
+          editBtn.dataset.rowKey = item.rowKey;
+          editBtn.textContent = item.id ? 'Editar' : 'Reservar';
+          actionCell.appendChild(editBtn);
+
+          if (item.id) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'action-btn delete-btn';
+            deleteBtn.dataset.id = item.id;
+            deleteBtn.textContent = 'Liberar';
+            actionCell.appendChild(deleteBtn);
+          }
+
+          tr.appendChild(actionCell);
+          tableBody.appendChild(tr);
+        });
+      }
+
+      function openEditor(row) {
+        form.reset();
+        formMessage.textContent = '';
+
+        dialogTitle.textContent = row.id ? 'Editar agendamento' : 'Reservar horário';
+        form.elements.id.value = row.id ?? '';
+        form.elements.rowKey.value = row.rowKey;
+        form.elements.data.value = row.data;
+        form.elements.horario.value = row.horario;
+        form.elements.status.value = row.status === 'disponivel' ? 'aguardando_upload' : row.status;
+        form.elements.shopping.value = row.shopping || '';
+        form.elements.nome_fantasia.value = row.nome_fantasia || '';
+        form.elements.nome_contato.value = row.nome_contato || '';
+        form.elements.telefone_whatsapp.value = row.telefone_whatsapp || '';
+        form.elements.email.value = row.email || '';
+        form.elements.informacoes_adicionais.value = row.informacoes_adicionais || '';
+        form.elements.upload_url.value = row.upload_arquivo?.url || '';
+        form.elements.upload_tipo.value = row.upload_arquivo?.tipo || '';
+        form.elements.upload_tamanho_mb.value = row.upload_arquivo?.tamanho_mb ?? '';
+        form.elements.data_hora_reserva.value = toInputDateTime(row.data_hora_reserva);
+        form.elements.expira_em.value = toInputDateTime(row.expira_em);
+
+        if (typeof dialog.showModal === 'function') {
+          dialog.showModal();
+        } else {
+          dialog.setAttribute('open', 'open');
+        }
+      }
+
+      async function submitForm(event) {
+        event.preventDefault();
+        formMessage.textContent = '';
+        const formData = new FormData(form);
+        const payload = {
+          id: formData.get('id') || undefined,
+          data: formData.get('data'),
+          horario: formData.get('horario'),
+          shopping: formData.get('shopping'),
+          nome_fantasia: formData.get('nome_fantasia'),
+          nome_contato: formData.get('nome_contato'),
+          telefone_whatsapp: formData.get('telefone_whatsapp'),
+          email: formData.get('email'),
+          informacoes_adicionais: formData.get('informacoes_adicionais'),
+          status: formData.get('status'),
+          upload_url: formData.get('upload_url'),
+          upload_tipo: formData.get('upload_tipo'),
+          upload_tamanho_mb: formData.get('upload_tamanho_mb'),
+          data_hora_reserva: formData.get('data_hora_reserva'),
+          expira_em: formData.get('expira_em')
+        };
+
+        if (!payload.data || !payload.horario) {
+          formMessage.textContent = 'Campos data e horário são obrigatórios.';
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/admin/agenda', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorPayload = await response.json().catch(() => ({}));
+            const message = errorPayload.message || 'Não foi possível salvar.';
+            throw new Error(message);
+          }
+
+          closeDialog();
+          await loadAgenda();
+          showToast('Informações salvas com sucesso');
+        } catch (error) {
+          formMessage.textContent = error.message;
+        }
+      }
+
+      function closeDialog() {
+        if (typeof dialog.close === 'function') {
+          dialog.close();
+        } else {
+          dialog.removeAttribute('open');
+        }
+        formMessage.textContent = '';
+      }
+
+      async function handleDelete(id) {
+        if (!id) return;
+        const confirmed = window.confirm('Confirma liberar este horário e remover o registro do JSON?');
+        if (!confirmed) return;
+
+        try {
+          const response = await fetch(`/api/admin/agenda/${id}`, { method: 'DELETE' });
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(payload.message || 'Erro ao remover agendamento.');
+          }
+          await loadAgenda();
+          showToast('Horário liberado');
+        } catch (error) {
+          showToast(error.message, true);
+        }
+      }
+
+      function handleTableClick(event) {
+        const editBtn = event.target.closest('.edit-btn');
+        if (editBtn) {
+          const { rowKey } = editBtn.dataset;
+          const row = state.agenda.find((item) => item.rowKey === rowKey);
+          if (row) {
+            openEditor(row);
+          }
+          return;
+        }
+
+        const deleteBtn = event.target.closest('.delete-btn');
+        if (deleteBtn) {
+          handleDelete(deleteBtn.dataset.id);
+        }
+      }
+
+      function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.style.background = isError ? '#dc2626' : '#0f172a';
+        toast.classList.add('show');
+        clearTimeout(showToast.timeoutId);
+        showToast.timeoutId = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3500);
+      }
+
+      dateFilter.addEventListener('change', renderTable);
+      statusFilter.addEventListener('change', renderTable);
+      searchFilter.addEventListener('input', () => {
+        renderTable();
+      });
+      refreshButton.addEventListener('click', loadAgenda);
+      tableBody.addEventListener('click', handleTableClick);
+      form.addEventListener('submit', submitForm);
+      cancelEditBtn.addEventListener('click', closeDialog);
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        closeDialog();
+      });
+
+      loadAgenda();
+    })();
+  </script>
+</body>
+</html>
