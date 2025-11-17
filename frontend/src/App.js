@@ -229,7 +229,7 @@ const App = () => {
       setReservation(data.reservation);
       setFeedback({
         type: 'success',
-        message: 'Pré-reserva realizada! O horário ficará reservado por 24h para envio do material.'
+        message: 'Visita registrada! O horário fica reservado por 24h para anexar os documentos.'
       });
       resetForm();
     } catch (error) {
@@ -316,31 +316,55 @@ const App = () => {
     <Page>
       <TitleBlock>
         <HeroCTA>
-          <span className="tagline">TZ Engenharia</span>
-          <h1>Promovendo o crescimento da energia solar!</h1>
+          <span className="tagline">TZ Engenharia · PMOC</span>
+          <h1>Agende a visita técnica</h1>
           <p>
-            Soluções completas para operações corporativas de energia renovável.
-            Garanta seu horário para homologação de materiais e suporte técnico com nossa equipe.
+            Executamos inspeções de ar-condicionado em shoppings para PMOC, vistorias e perícias.
           </p>
-          <Button>Fale conosco</Button>
+          <Button
+            as="a"
+            href="https://wa.me/5541992741261"
+            target="_blank"
+            rel="noreferrer"
+            style={{ background: '#1f2a37' }}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M16 3C9.373 3 4 8.373 4 15c0 2.109.576 4.082 1.58 5.773L4 29l8.445-1.554A11.94 11.94 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3Z"
+                stroke="#25D366"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M11.5 11.5c0-.552.448-1 1-1h.667c.424 0 .796.27.934.672l.852 2.556a1 1 0 0 1-.24 1.014l-.631.631a6.5 6.5 0 0 0 2.744 2.744l.631-.631a1 1 0 0 1 1.014-.24l2.556.852c.401.134.671.51.671.935V19.5c0 .552-.448 1-1 1a9.5 9.5 0 0 1-9.5-9.5Z"
+                stroke="#25D366"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Falar no WhatsApp
+          </Button>
         </HeroCTA>
 
         <ContactGrid>
           <ContactCard>
-            <strong>Contato rápido</strong>
-            <span>comercial@tzengenharia.com</span>
-            <span>(11) 3090-2838</span>
-          </ContactCard>
-          <ContactCard>
-            <strong>Endereço</strong>
-            <span>Rua Verbo Divino, 2001 - CJ 305</span>
-            <span>São Paulo / SP</span>
+            <strong>Coordenação técnica</strong>
+            <span>Curitiba e região</span>
+            <span>(41) 99274-1261</span>
           </ContactCard>
         </ContactGrid>
 
         <HeroTile>
-          <h3>Soluções industriais</h3>
-          <p>Nossa presença garante pontualidade e aderência às normas em cada projeto.</p>
+          <h3>PMOC, vistorias e perícias</h3>
+          <p>Equipe exclusiva para medições, relatórios e checklists obrigatórios.</p>
         </HeroTile>
       </TitleBlock>
 
@@ -349,9 +373,9 @@ const App = () => {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Agenda de atendimentos</h2>
+                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Agenda de visitas PMOC</h2>
                 <p style={{ margin: 0, color: 'var(--gray-500)', fontSize: '0.95rem' }}>
-                  Escolha a data e o horário, depois confirme seu cadastro.
+                  Selecione data e horário para nossa equipe vistoriar o sistema.
                 </p>
               </div>
               {user && (
@@ -402,7 +426,7 @@ const App = () => {
             )}
 
             <Button disabled={!formIsValid} onClick={handleSaveClick}>
-              Salvar pré-reserva
+              Agendar visita
             </Button>
           </>
         )}
@@ -410,7 +434,7 @@ const App = () => {
         {reservation && (
           <>
             <Feedback type="success">
-              Pré-reserva confirmada para {reservation.data} às {reservation.horario}.
+              Visita confirmada para {reservation.data} às {reservation.horario}.
               O bloqueio permanece até{' '}
               {new Date(reservation.expira_em).toLocaleString('pt-BR', {
                 timeZone: 'America/Sao_Paulo'

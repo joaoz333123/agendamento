@@ -3,12 +3,12 @@ import { Section, ChipGroup, Chip, Feedback } from './Layout';
 
 const DateSelector = ({ dates, selectedDate, onSelect }) => (
   <Section>
-    <h2>Escolha a data</h2>
-    <p>Atualizamos a agenda em tempo real conforme novas confirmações.</p>
+    <h2>Data da vistoria</h2>
+    <p>Selecione o dia disponível para nossa equipe.</p>
 
     {dates.length === 0 ? (
       <Feedback type="error">
-        Não encontramos datas disponíveis agora. Recarregue a página em instantes.
+        Sem datas abertas no momento. Tente novamente em instantes.
       </Feedback>
     ) : (
       <ChipGroup>

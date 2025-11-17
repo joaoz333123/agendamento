@@ -72,6 +72,10 @@ export const Section = styled.div`
 `;
 
 export const Button = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   background: ${({ variant }) =>
     variant === 'secondary' ? '#ffffff' : 'var(--cta-blue)'};
   color: ${({ variant }) => (variant === 'secondary' ? 'var(--cta-blue)' : '#fff')};
