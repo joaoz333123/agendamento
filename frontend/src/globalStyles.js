@@ -2,25 +2,33 @@ import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyle = createGlobalStyle`
   :root {
-    --gray-900: #1d1f20;
-    --gray-700: #3a3d3f;
-    --gray-500: #6c6f72;
-    --gray-300: #a5a8aa;
-    --accent: #4f6ef7;
-    --accent-light: #7f95ff;
-    --success: #2a9d8f;
-    --error: #e76f51;
+    --hero-blue: #0a4d8c;
+    --cta-blue: #1c7ff2;
+    --cta-blue-dark: #1562b8;
+    --gray-900: #101828;
+    --gray-500: #475467;
+    --gray-300: #7a869a;
+    --border-soft: #e4e7ec;
+    --surface: #ffffff;
     font-size: 16px;
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
 
   body {
     margin: 0;
     font-family: 'Inter', Arial, sans-serif;
-    background: linear-gradient(135deg, var(--gray-900) 0%, #54585c 100%);
-    color: #fff;
+    background: #f5f8fc;
+    color: var(--gray-900);
     min-height: 100vh;
+    padding: 32px;
+  }
+
+  #root {
+    width: 100%;
+    min-height: calc(100vh - 64px);
     display: flex;
     align-items: center;
     justify-content: center;

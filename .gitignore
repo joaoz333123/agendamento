@@ -1,0 +1,31 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Build outputs
+dist/
+build/
+coverage/
+**/dist/
+**/build/
+**/coverage/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+
+# Misc temp files
+tmp/
+*.tmp

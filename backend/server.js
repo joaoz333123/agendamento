@@ -93,14 +93,23 @@ app.get('/api/slots', async (req, res) => {
     const appointments = expireIfNeeded(await readAppointments());
     await writeAppointments(appointments);
 
-    const taken = appointments.filter(
-      (appt) =>
-        appt.data === date &&
-        appt.status !== 'cancelado'
-    ).map((appt) => appt.horario);
+    const taken = appointments
+      .filter(
+        (appt) =>
+          appt.data === date &&
+          appt.status !== 'cancelado'
+      )
+      .map((appt) => appt.horario);
 
-    const available = predefinedSlots.filter((slot) => !taken.includes(slot));
-    res.json({ availableSlots: available });
+    const slots = predefinedSlots.map((slot) => ({
+      time: slot,
+      available: !taken.includes(slot)
+    }));
+
+    res.json({
+      slots,
+      availableSlots: slots.filter((slot) => slot.available).map((slot) => slot.time)
+    });
   });
 });
 

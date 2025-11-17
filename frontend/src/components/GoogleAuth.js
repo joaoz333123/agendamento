@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const LoginBox = styled.div`
@@ -18,36 +18,38 @@ const LoginBox = styled.div`
 `;
 
 const GoogleAuth = ({ onLogin }) => {
+  const buttonRef = useRef(null);
+
   useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || '<COLOQUE_SEU_CLIENT_ID>',
-        callback: (response) => {
-          const credential = response.credential;
-          if (!credential) return;
-          const base64Payload = credential.split('.')[1];
-          const decoded = JSON.parse(atob(base64Payload));
-          onLogin({
-            email: decoded.email,
-            name: decoded.name
-          });
-        }
-      });
+    if (!window.google || !buttonRef.current) return;
 
-      window.google.accounts.id.renderButton(
-        document.getElementById('googleSignInDiv'),
-        { theme: 'outline', size: 'large' }
-      );
+    window.google.accounts.id.initialize({
+      client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || '<COLOQUE_SEU_CLIENT_ID>',
+      ux_mode: 'popup',
+      callback: (response) => {
+        const credential = response.credential;
+        if (!credential) return;
+        const base64Payload = credential.split('.')[1];
+        const decoded = JSON.parse(atob(base64Payload));
+        onLogin({
+          email: decoded.email,
+          name: decoded.name
+        });
+      }
+    });
 
-      window.google.accounts.id.prompt();
-    }
+    buttonRef.current.innerHTML = '';
+    window.google.accounts.id.renderButton(
+      buttonRef.current,
+      { theme: 'outline', size: 'large' }
+    );
   }, [onLogin]);
 
   return (
     <LoginBox>
       <h3>Entre com sua conta Google</h3>
       <p>Utilizamos apenas seu e-mail para identificar a reserva.</p>
-      <div id="googleSignInDiv" />
+      <div ref={buttonRef} />
     </LoginBox>
   );
 };

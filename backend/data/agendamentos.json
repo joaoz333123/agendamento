@@ -1,1 +1,59 @@
-[]
+[
+  {
+    "id": "1da3b90b-4b06-4400-b82b-bb3de76319f7",
+    "data": "2025-11-18",
+    "horario": "13:00",
+    "shopping": "Shopping Centro",
+    "nome_fantasia": "Loja091",
+    "nome_contato": "Adeamma",
+    "telefone_whatsapp": "41992040404",
+    "email": "joaozanetti3@gmail.com",
+    "informacoes_adicionais": "",
+    "status": "aguardando_upload",
+    "upload_arquivo": {
+      "url": null,
+      "tipo": null,
+      "tamanho_mb": null
+    },
+    "data_hora_reserva": "2025-11-17T03:55:35.519Z",
+    "expira_em": "2025-11-18T03:55:35.519Z"
+  },
+  {
+    "id": "952044a8-5517-4051-ab4b-ae537b2994d0",
+    "data": "2025-11-19",
+    "horario": "13:00",
+    "shopping": "Shopping Centro",
+    "nome_fantasia": "sadasdasd",
+    "nome_contato": "sadasdasd",
+    "telefone_whatsapp": "41992741111",
+    "email": "joaozanetti3@gmail.com",
+    "informacoes_adicionais": "",
+    "status": "reservado",
+    "upload_arquivo": {
+      "url": "/uploads/409133c5-8965-41bc-8881-3e7a9ca4487a.png",
+      "tipo": "imagem",
+      "tamanho_mb": 0.1
+    },
+    "data_hora_reserva": "2025-11-17T03:56:33.503Z",
+    "expira_em": "2025-11-18T03:56:33.503Z"
+  },
+  {
+    "id": "c7f7aecc-d07b-49ac-8c25-04e79062bad1",
+    "data": "2025-11-18",
+    "horario": "14:00",
+    "shopping": "Shopping Leste",
+    "nome_fantasia": "sadasdas",
+    "nome_contato": "sadasdasd",
+    "telefone_whatsapp": "41992741266",
+    "email": "joaozanetti3@gmail.com",
+    "informacoes_adicionais": "",
+    "status": "reservado",
+    "upload_arquivo": {
+      "url": "/uploads/f34d7df3-2030-43d7-bf69-8eb3dee87596.jpg",
+      "tipo": "imagem",
+      "tamanho_mb": 1.71
+    },
+    "data_hora_reserva": "2025-11-17T04:22:19.136Z",
+    "expira_em": "2025-11-18T04:22:19.136Z"
+  }
+]

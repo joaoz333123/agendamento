@@ -1,5 +1,27 @@
 import React, { useRef, useState } from 'react';
+import styled from 'styled-components';
 import { Section, Button, Feedback } from './Layout';
+
+const ActionsRow = styled.div`
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+`;
+
+const FileBadge = styled.div`
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-300);
+  font-size: 0.85rem;
+
+  strong {
+    color: #fff;
+  }
+`;
 
 const UploadArea = ({ onUpload, loading, status }) => {
   const inputRef = useRef(null);
@@ -20,12 +42,17 @@ const UploadArea = ({ onUpload, loading, status }) => {
   return (
     <Section>
       <h2>Envie o material</h2>
-      <p style={{ color: 'var(--gray-300)', fontSize: '0.9rem', margin: 0 }}>
-        Tipos aceitos: PDF ou imagem (até 4 MB). Apenas um arquivo por agendamento.
-      </p>
-      <Button variant="secondary" onClick={() => inputRef.current.click()}>
-        Selecionar arquivo
-      </Button>
+      <p>Arquivos em PDF ou imagem, até 4 MB. Apenas um arquivo por agendamento.</p>
+
+      <ActionsRow>
+        <Button variant="secondary" onClick={() => inputRef.current.click()}>
+          Selecionar arquivo
+        </Button>
+        <Button onClick={handleSubmit} disabled={!selectedFile || loading}>
+          {loading ? 'Enviando...' : 'Enviar arquivo'}
+        </Button>
+      </ActionsRow>
+
       <input
         type="file"
         ref={inputRef}
@@ -33,14 +60,14 @@ const UploadArea = ({ onUpload, loading, status }) => {
         accept=".pdf, image/png, image/jpeg, image/jpg, image/webp"
         style={{ display: 'none' }}
       />
+
       {selectedFile && (
-        <Feedback type="success">
-          Arquivo selecionado: <strong>{selectedFile.name}</strong> ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-        </Feedback>
+        <FileBadge>
+          Arquivo selecionado: <strong>{selectedFile.name}</strong>{' '}
+          ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+        </FileBadge>
       )}
-      <Button onClick={handleSubmit} disabled={!selectedFile || loading}>
-        {loading ? 'Enviando...' : 'Enviar arquivo'}
-      </Button>
+
       {status && (
         <Feedback type={status.type}>
           {status.message}
