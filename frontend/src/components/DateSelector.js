@@ -6,30 +6,24 @@ const DateSelector = ({ dates, selectedDate, onSelect }) => (
     <h2>Data da vistoria</h2>
     <p>Selecione o dia disponível para nossa equipe.</p>
 
-    {dates.length === 0 ? (
-      <Feedback type="error">
-        Sem datas abertas no momento. Tente novamente em instantes.
-      </Feedback>
-    ) : (
-      <ChipGroup>
-        {dates.map((date) => {
-          const formatted = new Date(date).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'short',
-            weekday: 'short'
-          });
-          return (
-            <Chip
-              key={date}
-              active={selectedDate === date}
-              onClick={() => onSelect(date)}
-            >
-              {formatted}
-            </Chip>
-          );
-        })}
-      </ChipGroup>
-    )}
+    <ChipGroup>
+      {dates.map((date) => {
+        const formatted = new Date(date).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'short',
+          weekday: 'short'
+        });
+        return (
+          <Chip
+            key={date}
+            active={selectedDate === date}
+            onClick={() => onSelect(date)}
+          >
+            {formatted}
+          </Chip>
+        );
+      })}
+    </ChipGroup>
   </Section>
 );
 
