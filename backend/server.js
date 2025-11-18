@@ -47,7 +47,6 @@ const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'defina-um-segr
 const GOOGLE_CLIENT_ID =
   process.env.GOOGLE_CLIENT_ID ||
   process.env.ADMIN_GOOGLE_CLIENT_ID ||
-  process.env.GOOGLE_OAUTH_CLIENT_ID ||
   process.env.REACT_APP_GOOGLE_CLIENT_ID ||
   '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;

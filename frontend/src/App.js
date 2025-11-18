@@ -546,13 +546,11 @@ const App = () => {
       {adminModalOpen && (
         <LoginModalOverlay onClick={handleCloseAdminModal}>
           <LoginModalCard onClick={(event) => event.stopPropagation()}>
-            <h3 style={{ margin: 0 }}>Acesso restrito</h3>
-            <GoogleAuth
-              onLogin={handleAdminLogin}
-              title={null}
-              description={null}
-              compact
-            />
+            <h3 style={{ margin: 0 }}>Painel administrativo</h3>
+            <p style={{ margin: '4px 0 12px', color: 'var(--gray-500)' }}>
+              Somente {ADMIN_EMAIL} possui acesso autorizado.
+            </p>
+            <GoogleAuth onLogin={handleAdminLogin} />
             {adminAccessMessage && (
               <AdminStatusMessage
                 $error={!adminAccessMessage.toLowerCase().includes('validando')}

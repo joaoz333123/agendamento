@@ -17,7 +17,7 @@ const LoginBox = styled.div`
   }
 `;
 
-const GoogleAuth = ({ onLogin, title = 'Entre com sua conta Google', description = 'Utilizamos apenas seu e-mail para identificar a reserva.', compact = false }) => {
+const GoogleAuth = ({ onLogin }) => {
   const buttonRef = useRef(null);
 
   useEffect(() => {
@@ -47,17 +47,11 @@ const GoogleAuth = ({ onLogin, title = 'Entre com sua conta Google', description
     );
   }, [onLogin]);
 
-  const button = <div ref={buttonRef} />;
-
-  if (compact) {
-    return button;
-  }
-
   return (
     <LoginBox>
-      {title && <h3>{title}</h3>}
-      {description && <p>{description}</p>}
-      {button}
+      <h3>Entre com sua conta Google</h3>
+      <p>Utilizamos apenas seu e-mail para identificar a reserva.</p>
+      <div ref={buttonRef} />
     </LoginBox>
   );
 };
