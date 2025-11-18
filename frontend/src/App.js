@@ -269,7 +269,7 @@ const App = () => {
       setReservation(data.reservation);
       setFeedback({
         type: 'success',
-        message: 'Visita registrada! O horário fica reservado por 24h para anexar os documentos.'
+        message: 'Visita Agendada!'
       });
       resetForm();
     } catch (error) {
@@ -392,10 +392,10 @@ const App = () => {
       <Page>
         <TitleBlock>
         <HeroCTA>
-          <span className="tagline">TZ Engenharia · PMOC</span>
-          <h1>Agende a visita técnica</h1>
+          <span className="tagline">TZ Engenharia · Laudos, PMOCs, Auditorias</span>
+          <h1>Agendamento de visitas técnicas</h1>
           <p>
-            Executamos inspeções de ar-condicionado em shoppings para PMOC, vistorias e perícias.
+            Exclusivo para: PMOCs, Auditorias e Laudos de Engenharia. 
           </p>
           <Button
             as="a"
@@ -432,15 +432,15 @@ const App = () => {
 
         <ContactGrid>
           <ContactCard>
-            <strong>Coordenação técnica</strong>
-            <span>Curitiba e região</span>
+            <strong>TZ Engenharia Técnica</strong>
+            <span>Contato (WhatsApp)</span>
             <span>(41) 99274-1261</span>
           </ContactCard>
         </ContactGrid>
 
         <HeroTile>
-          <h3>PMOC, vistorias e perícias</h3>
-          <p>Equipe exclusiva para medições, relatórios e checklists obrigatórios.</p>
+          <h3>PMOCs, Auditorias e Laudos de Engenharia</h3>
+          <p>Sistema exclusivo para agendamentos</p>
         </HeroTile>
       </TitleBlock>
 
@@ -449,9 +449,9 @@ const App = () => {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Agenda de visitas PMOC</h2>
+                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Agenda de visitas (PACOTES DE DESCONTO PARA LOJISTAS DE SHOPPING)</h2>
                 <p style={{ margin: 0, color: 'var(--gray-500)', fontSize: '0.95rem' }}>
-                  Selecione data e horário para nossa equipe vistoriar o sistema.
+                  Insira as informações de local
                 </p>
               </div>
               {user && (
@@ -485,7 +485,7 @@ const App = () => {
                   ))}
                 </ChipGroup>
               ) : selectedDate ? (
-                <Feedback type="error">Não há horários disponíveis nesta data.</Feedback>
+                <Feedback type="error">Encontre a melhor opção de horário para você</Feedback>
               ) : (
                 <p>Selecione uma data para ver os horários.</p>
               )}
