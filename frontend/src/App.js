@@ -15,6 +15,7 @@ import GoogleAuth from './components/GoogleAuth';
 import DateSelector from './components/DateSelector';
 import FormFields from './components/FormFields';
 import UploadArea from './components/UploadArea';
+import VistoriaPage from './components/VistoriaPage';
 
 const HeroCTA = styled.div`
   display: flex;
@@ -106,6 +107,22 @@ const LoginModalCard = styled(LoginPrompt)`
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
 `;
 
+const PasswordInput = styled.input`
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--gray-900);
+  font-size: 0.95rem;
+  width: 100%;
+
+  &:focus {
+    border-color: var(--cta-blue);
+    box-shadow: 0 0 0 1px rgba(28, 127, 242, 0.2);
+    outline: none;
+  }
+`;
+
 const AdminButton = styled.button`
   position: fixed;
   left: 24px;
@@ -162,6 +179,11 @@ const App = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [adminAccessMessage, setAdminAccessMessage] = useState(null);
   const [pendingReservation, setPendingReservation] = useState(false);
+  const [vistoriaPromptOpen, setVistoriaPromptOpen] = useState(false);
+  const [vistoriaPassword, setVistoriaPassword] = useState('');
+  const [vistoriaError, setVistoriaError] = useState('');
+  const [vistoriaUnlocked, setVistoriaUnlocked] = useState(false);
+  const [showVistoria, setShowVistoria] = useState(false);
   const normalizedAdminEmail = ADMIN_EMAIL.toLowerCase();
   const backendBaseUrl = useMemo(() => {
     const base = api.defaults.baseURL || 'http://localhost:4000';
@@ -387,6 +409,41 @@ const App = () => {
     setSelectedSlot(slot.time);
   };
 
+  const handleOpenVistoria = () => {
+    if (vistoriaUnlocked) {
+      setShowVistoria(true);
+      return;
+    }
+    setVistoriaPromptOpen(true);
+  };
+
+  const handleCloseVistoria = () => {
+    setShowVistoria(false);
+  };
+
+  const handleCloseVistoriaPrompt = () => {
+    setVistoriaPromptOpen(false);
+    setVistoriaPassword('');
+    setVistoriaError('');
+  };
+
+  const handleVistoriaAccess = (event) => {
+    event.preventDefault();
+    if (vistoriaPassword === '1111') {
+      setVistoriaUnlocked(true);
+      setShowVistoria(true);
+      setVistoriaPromptOpen(false);
+      setVistoriaPassword('');
+      setVistoriaError('');
+    } else {
+      setVistoriaError('Senha incorreta. Tente novamente.');
+    }
+  };
+
+  if (showVistoria) {
+    return <VistoriaPage onClose={handleCloseVistoria} />;
+  }
+
   return (
     <>
       <Page>
@@ -427,6 +484,9 @@ const App = () => {
               />
             </svg>
             Falar no WhatsApp
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleOpenVistoria}>
+            Vistoria
           </Button>
         </HeroCTA>
 
@@ -563,6 +623,36 @@ const App = () => {
             <Button variant="secondary" onClick={handleCloseAdminModal}>
               Fechar
             </Button>
+          </LoginModalCard>
+        </LoginModalOverlay>
+      )}
+
+      {vistoriaPromptOpen && (
+        <LoginModalOverlay onClick={handleCloseVistoriaPrompt}>
+          <LoginModalCard onClick={(event) => event.stopPropagation()}>
+            <h3 style={{ margin: 0 }}>Área de Vistoria</h3>
+            <p style={{ margin: 0, color: 'var(--gray-500)' }}>
+              Informe a senha para acessar o checklist.
+            </p>
+            <form
+              onSubmit={handleVistoriaAccess}
+              style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+            >
+              <PasswordInput
+                type="password"
+                placeholder="Digite a senha"
+                value={vistoriaPassword}
+                onChange={(event) => setVistoriaPassword(event.target.value)}
+                autoFocus
+              />
+              {vistoriaError && (
+                <AdminStatusMessage $error>{vistoriaError}</AdminStatusMessage>
+              )}
+              <Button type="submit">Entrar</Button>
+              <Button type="button" variant="secondary" onClick={handleCloseVistoriaPrompt}>
+                Cancelar
+              </Button>
+            </form>
           </LoginModalCard>
         </LoginModalOverlay>
       )}
