@@ -12,9 +12,7 @@ import {
   HardHat,
   FileText,
   ChevronRight,
-  LogOut,
-  Lock,
-  X
+  Lock
 } from 'lucide-react';
 import api from './api';
 import GoogleAuth from './components/GoogleAuth';
@@ -93,7 +91,6 @@ const formatDateLabel = (value) => {
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [slots, setSlots] = useState([]);
@@ -111,17 +108,15 @@ const App = () => {
   const [reservation, setReservation] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [uploadState, setUploadState] = useState({ loading: false, status: null });
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [adminAccessMessage, setAdminAccessMessage] = useState(null);
-  const [pendingReservation, setPendingReservation] = useState(false);
   const normalizedAdminEmail = ADMIN_EMAIL.toLowerCase();
   const backendBaseUrl = useMemo(() => {
     const base = api.defaults?.baseURL || process.env.REACT_APP_API_URL || 'http://localhost:4000';
     return base.endsWith('/') ? base.slice(0, -1) : base;
   }, []);
 
-  const resetForm = useCallback((defaultEmail = user?.email || '') => {
+  const resetForm = useCallback((defaultEmail = '') => {
     setSelectedDate('');
     setSelectedSlot('');
     setFormData({
@@ -134,7 +129,7 @@ const App = () => {
     });
     setFormErrors({});
     setFeedback(null);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     api
@@ -178,12 +173,6 @@ const App = () => {
       setSelectedSlot('');
     }
   }, [slots, selectedSlot]);
-
-  useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({ ...prev, email: user.email }));
-    }
-  }, [user]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -259,33 +248,11 @@ const App = () => {
     }
   }, [formData, formIsValid, selectedDate, selectedSlot]);
 
-  useEffect(() => {
-    if (pendingReservation && user) {
-      if (!formIsValid) {
-        setPendingReservation(false);
-        return;
-      }
-      createReservation();
-      setPendingReservation(false);
-    }
-  }, [pendingReservation, user, formIsValid, createReservation]);
-
   const handleSaveClick = (event) => {
     event.preventDefault();
     if (!formIsValid) return;
 
-    if (!user) {
-      setPendingReservation(true);
-      setLoginModalOpen(true);
-      return;
-    }
-
     createReservation();
-  };
-
-  const handleCloseLoginModal = () => {
-    setLoginModalOpen(false);
-    setPendingReservation(false);
   };
 
   const handleOpenAdminModal = () => {
@@ -358,19 +325,6 @@ const App = () => {
         status: { type: 'error', message }
       });
     }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setReservation(null);
-    resetForm('');
-    setFeedback(null);
-    setUploadState({ loading: false, status: null });
-  };
-
-  const handleGoogleLogin = (loggedUser) => {
-    setUser(loggedUser);
-    setLoginModalOpen(false);
   };
 
   if (reservation) {
@@ -474,14 +428,6 @@ const App = () => {
                 <p className="font-semibold text-white">TZ Engenharia Técnica</p>
                 <p>(41) 99274-1261</p>
               </div>
-              {user && (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors text-xs font-semibold"
-                >
-                  <LogOut size={14} /> Sair ({user.name || 'Conta'})
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -688,37 +634,6 @@ const App = () => {
           </button>
         </div>
       </div>
-
-      {loginModalOpen && !user && (
-        <div
-          className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={handleCloseLoginModal}
-        >
-          <div
-            className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Finalizar Agendamento</h3>
-              <button onClick={handleCloseLoginModal} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            </div>
-            <p className="text-slate-500 text-center mb-6 text-sm">
-              Faça login com o Google para confirmar sua identidade e salvar o agendamento com segurança.
-            </p>
-            <div className="flex justify-center mb-4">
-              <GoogleAuth onLogin={handleGoogleLogin} />
-            </div>
-            <button
-              onClick={handleCloseLoginModal}
-              className="w-full text-slate-400 text-sm hover:text-slate-600 mt-4 py-2"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
 
       {adminModalOpen && (
         <div
