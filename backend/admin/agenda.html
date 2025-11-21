@@ -503,10 +503,14 @@
     (() => {
       'use strict';
 
+      const TOKEN_STORAGE_KEY = 'tz-admin-token';
+      const ADMIN_LOGIN_HINT = 'Use o botão "admin" no site principal e faça login com sua conta autorizada.';
+
       const state = {
         agenda: [],
         dates: [],
-        slots: []
+        slots: [],
+        token: null
       };
 
       const tableBody = document.getElementById('agendaTableBody');
@@ -520,6 +524,45 @@
       const formMessage = document.getElementById('formMessage');
       const cancelEditBtn = document.getElementById('cancelEditBtn');
       const toast = document.getElementById('toast');
+
+      function captureTokenFromHash() {
+        const hash = window.location.hash.replace(/^#/, '');
+        const params = new URLSearchParams(hash);
+        const token = params.get('token');
+        if (token) {
+          sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+          const cleanUrl = window.location.pathname + window.location.search;
+          window.history.replaceState(null, '', cleanUrl);
+          return token;
+        }
+        return null;
+      }
+
+      function restoreToken() {
+        return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+      }
+
+      function clearToken() {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        state.token = null;
+      }
+
+      function ensureAuthorized(showAlert = false) {
+        if (state.token) return true;
+        setTableMessage(`Acesso restrito. ${ADMIN_LOGIN_HINT}`);
+        if (showAlert) {
+          showToast('Acesso restrito. Abra o painel pelo botão "admin".', true);
+        }
+        return false;
+      }
+
+      function handleUnauthorized() {
+        clearToken();
+        setTableMessage(`Sessão encerrada. ${ADMIN_LOGIN_HINT}`);
+        showToast('Sessão expirada. Faça login novamente.', true);
+      }
+
+      state.token = captureTokenFromHash() || restoreToken();
 
       function formatDate(dateStr) {
         if (!dateStr) return '-';
@@ -594,9 +637,18 @@
       }
 
       async function loadAgenda() {
+        if (!ensureAuthorized()) return;
         setTableMessage('Carregando agenda...');
         try {
-          const response = await fetch('/api/admin/agenda');
+          const response = await fetch('/api/admin/agenda', {
+            headers: {
+              Authorization: `Bearer ${state.token}`
+            }
+          });
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            return;
+          }
           if (!response.ok) {
             throw new Error('Falha ao carregar');
           }
@@ -772,6 +824,7 @@
 
       async function submitForm(event) {
         event.preventDefault();
+        if (!ensureAuthorized(true)) return;
         formMessage.textContent = '';
         const formData = new FormData(form);
         const payload = {
@@ -800,10 +853,16 @@
         try {
           const response = await fetch('/api/admin/agenda', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${state.token}`
+            },
             body: JSON.stringify(payload)
           });
-
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            return;
+          }
           if (!response.ok) {
             const errorPayload = await response.json().catch(() => ({}));
             const message = errorPayload.message || 'Não foi possível salvar.';
@@ -831,9 +890,19 @@
         if (!id) return;
         const confirmed = window.confirm('Confirma liberar este horário e remover o registro do JSON?');
         if (!confirmed) return;
+        if (!ensureAuthorized(true)) return;
 
         try {
-          const response = await fetch(`/api/admin/agenda/${id}`, { method: 'DELETE' });
+          const response = await fetch(`/api/admin/agenda/${id}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${state.token}`
+            }
+          });
+          if (response.status === 401 || response.status === 403) {
+            handleUnauthorized();
+            return;
+          }
           if (!response.ok) {
             const payload = await response.json().catch(() => ({}));
             throw new Error(payload.message || 'Erro ao remover agendamento.');
@@ -886,7 +955,11 @@
         closeDialog();
       });
 
-      loadAgenda();
+      if (state.token) {
+        loadAgenda();
+      } else {
+        ensureAuthorized(true);
+      }
     })();
   </script>
 </body>
