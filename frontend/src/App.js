@@ -1,160 +1,96 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import styled from 'styled-components';
-import api from './api';
 import {
-  Page,
-  TitleBlock,
-  Panel,
-  Section,
-  Button,
-  ChipGroup,
-  Chip,
-  Feedback
-} from './components/Layout';
+  Calendar,
+  Clock,
+  MapPin,
+  Building2,
+  Phone,
+  Mail,
+  MessageSquare,
+  CheckCircle2,
+  AlertCircle,
+  HardHat,
+  FileText,
+  ChevronRight,
+  LogOut,
+  Lock,
+  X
+} from 'lucide-react';
+import api from './api';
 import GoogleAuth from './components/GoogleAuth';
-import DateSelector from './components/DateSelector';
-import FormFields from './components/FormFields';
 import UploadArea from './components/UploadArea';
-import VistoriaPage from './components/VistoriaPage';
-
-const HeroCTA = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const ContactGrid = styled.div`
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-`;
-
-const ContactCard = styled.div`
-  flex: 1;
-  min-width: 180px;
-  background: #fff;
-  border: 1px solid var(--border-soft);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  strong {
-    color: var(--gray-900);
-    font-size: 0.95rem;
-  }
-
-  span {
-    color: var(--gray-500);
-    font-size: 0.85rem;
-  }
-`;
-
-const HeroTile = styled.div`
-  background: linear-gradient(135deg, #0a4d8c, #1c7ff2);
-  border-radius: 24px;
-  padding: 24px;
-  color: #fff;
-  max-width: 320px;
-
-  h3 {
-    margin: 0 0 6px;
-    font-size: 1.15rem;
-  }
-
-  p {
-    margin: 0;
-    color: #eef2ff;
-    font-size: 0.9rem;
-  }
-`;
-
-const LoginPrompt = styled.div`
-  border: 1px dashed var(--cta-blue);
-  border-radius: 16px;
-  background: #fff;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  strong {
-    color: var(--gray-900);
-  }
-
-  p {
-    margin: 0;
-    color: var(--gray-500);
-    font-size: 0.9rem;
-  }
-`;
-
-const LoginModalOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 1000;
-`;
-
-const LoginModalCard = styled(LoginPrompt)`
-  max-width: 420px;
-  width: 100%;
-  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
-`;
-
-const PasswordInput = styled.input`
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-soft);
-  background: #fff;
-  color: var(--gray-900);
-  font-size: 0.95rem;
-  width: 100%;
-
-  &:focus {
-    border-color: var(--cta-blue);
-    box-shadow: 0 0 0 1px rgba(28, 127, 242, 0.2);
-    outline: none;
-  }
-`;
-
-const AdminButton = styled.button`
-  position: fixed;
-  left: 24px;
-  bottom: 24px;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 18px;
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  background: rgba(15, 23, 42, 0.9);
-  color: #f8fafc;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  z-index: 900;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.5);
-    background: #0f172a;
-  }
-`;
-
-const AdminStatusMessage = styled.p`
-  font-size: 0.85rem;
-  margin: 8px 0 0;
-  color: ${({ $error }) => ($error ? '#f87171' : '#22c55e')};
-`;
 
 const ADMIN_EMAIL = 'joaozanetti3@gmail.com';
+
+const InputField = ({
+  label,
+  type = 'text',
+  placeholder,
+  icon: Icon,
+  required = false,
+  options = null,
+  value,
+  onChange,
+  name,
+  error
+}) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+      {label} {required && <span className="text-blue-600">*</span>}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+
+      {options ? (
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`w-full bg-slate-50 border ${error ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent block p-3 ${Icon ? 'pl-10' : ''} transition-all outline-none appearance-none cursor-pointer hover:bg-white`}
+        >
+          <option value="" disabled>
+            {placeholder}
+          </option>
+          {options.map((opt, idx) => (
+            <option key={idx} value={opt.value || opt}>
+              {opt.label || opt}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`w-full bg-slate-50 border ${error ? 'border-red-300 ring-1 ring-red-200' : 'border-slate-200'} text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent block p-3 ${Icon ? 'pl-10' : ''} transition-all outline-none placeholder:text-slate-400 hover:bg-white`}
+          placeholder={placeholder}
+        />
+      )}
+    </div>
+    {error && <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>}
+  </div>
+);
+
+const formatDateLabel = (value) => {
+  if (!value) {
+    return '';
+  }
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+};
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -179,18 +115,13 @@ const App = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [adminAccessMessage, setAdminAccessMessage] = useState(null);
   const [pendingReservation, setPendingReservation] = useState(false);
-  const [vistoriaPromptOpen, setVistoriaPromptOpen] = useState(false);
-  const [vistoriaPassword, setVistoriaPassword] = useState('');
-  const [vistoriaError, setVistoriaError] = useState('');
-  const [vistoriaUnlocked, setVistoriaUnlocked] = useState(false);
-  const [showVistoria, setShowVistoria] = useState(false);
   const normalizedAdminEmail = ADMIN_EMAIL.toLowerCase();
   const backendBaseUrl = useMemo(() => {
-    const base = api.defaults.baseURL || 'http://localhost:4000';
+    const base = api.defaults?.baseURL || process.env.REACT_APP_API_URL || 'http://localhost:4000';
     return base.endsWith('/') ? base.slice(0, -1) : base;
   }, []);
 
-  const resetForm = useCallback(() => {
+  const resetForm = useCallback((defaultEmail = user?.email || '') => {
     setSelectedDate('');
     setSelectedSlot('');
     setFormData({
@@ -198,7 +129,7 @@ const App = () => {
       nome_fantasia: '',
       nome_contato: '',
       telefone_whatsapp: '',
-      email: user?.email || '',
+      email: defaultEmail,
       informacoes_adicionais: ''
     });
     setFormErrors({});
@@ -206,33 +137,40 @@ const App = () => {
   }, [user]);
 
   useEffect(() => {
-    api.get('/api/dates')
-      .then(({ data }) => setDates(data.dates))
-      .catch(() => setFeedback({ type: 'error', message: 'Erro ao carregar datas disponíveis.' }));
+    api
+      .get('/api/dates')
+      .then(({ data }) => setDates(data.dates || []))
+      .catch(() =>
+        setFeedback({ type: 'error', message: 'Erro ao carregar datas disponíveis.' })
+      );
   }, []);
 
   useEffect(() => {
-    if (selectedDate) {
-      setLoadingSlots(true);
-      api.get('/api/slots', { params: { date: selectedDate } })
-        .then(({ data }) => {
-          const normalized = data.slots
-            ? data.slots.map((slot) => ({
-                time: slot.time,
-                available: slot.available
-              }))
-            : (data.availableSlots || []).map((time) => ({
-                time,
-                available: true
-              }));
-          setSlots(normalized);
-        })
-        .catch(() => setFeedback({ type: 'error', message: 'Não foi possível carregar os horários para a data selecionada.' }))
-        .finally(() => setLoadingSlots(false));
-    } else {
+    if (!selectedDate) {
       setSlots([]);
       setSelectedSlot('');
+      return;
     }
+
+    setLoadingSlots(true);
+    api
+      .get('/api/slots', { params: { date: selectedDate } })
+      .then(({ data }) => {
+        const normalized = data.slots
+          ? data.slots.map((slot) => ({
+              time: slot.time,
+              available: slot.available
+            }))
+          : (data.availableSlots || []).map((time) => ({
+              time,
+              available: true
+            }));
+        setSlots(normalized);
+      })
+      .catch(() =>
+        setFeedback({ type: 'error', message: 'Não foi possível carregar os horários.' })
+      )
+      .finally(() => setLoadingSlots(false));
   }, [selectedDate]);
 
   useEffect(() => {
@@ -247,36 +185,61 @@ const App = () => {
     }
   }, [user]);
 
-  const handleFormChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const validators = useMemo(() => ({
-    email: (value) => /\S+@\S+\.\S+/.test(value),
-    telefone_whatsapp: (value) => value.replace(/\D/g, '').length >= 10
-  }), []);
+  const validators = useMemo(() => {
+    const emailValidator = (value) => /\S+@\S+\.\S+/.test(value);
+    const whatsappValidator = (value) => value.replace(/\D/g, '').length >= 10;
+    return {
+      email: emailValidator,
+      telefone_whatsapp: whatsappValidator
+    };
+  }, []);
 
-  const formIsValid = useMemo(() => {
-    const requiredFields = ['shopping', 'nome_fantasia', 'nome_contato', 'telefone_whatsapp', 'email'];
+  const validationErrors = useMemo(() => {
+    const requiredFields = [
+      'shopping',
+      'nome_fantasia',
+      'nome_contato',
+      'telefone_whatsapp',
+      'email'
+    ];
     const newErrors = {};
 
     requiredFields.forEach((field) => {
       if (!formData[field]?.trim()) {
-        newErrors[field] = 'Preencha todos os campos obrigatórios.';
+        newErrors[field] = 'Campo obrigatório.';
       }
     });
 
     if (formData.email && !validators.email(formData.email)) {
-      newErrors.email = 'Informe um e-mail válido.';
+      newErrors.email = 'E-mail inválido.';
     }
 
-    if (formData.telefone_whatsapp && !validators.telefone_whatsapp(formData.telefone_whatsapp)) {
-      newErrors.telefone_whatsapp = 'Informe um WhatsApp válido (mín. 10 dígitos).';
+    if (
+      formData.telefone_whatsapp &&
+      !validators.telefone_whatsapp(formData.telefone_whatsapp)
+    ) {
+      newErrors.telefone_whatsapp = 'WhatsApp inválido (mín. 10 dígitos).';
     }
 
-    setFormErrors(newErrors);
-    return Object.keys(newErrors).length === 0 && selectedSlot && selectedDate;
-  }, [formData, selectedSlot, selectedDate, validators]);
+    return newErrors;
+  }, [formData, validators]);
+
+  useEffect(() => {
+    setFormErrors(validationErrors);
+  }, [validationErrors]);
+
+  const formIsValid = useMemo(() => {
+    return (
+      Object.keys(validationErrors).length === 0 &&
+      Boolean(selectedSlot) &&
+      Boolean(selectedDate)
+    );
+  }, [validationErrors, selectedSlot, selectedDate]);
 
   const createReservation = useCallback(async () => {
     if (!formIsValid) return;
@@ -289,16 +252,12 @@ const App = () => {
       };
       const { data } = await api.post('/api/reservations', payload);
       setReservation(data.reservation);
-      setFeedback({
-        type: 'success',
-        message: 'Visita Agendada!'
-      });
-      resetForm();
+      setFeedback({ type: 'success', message: 'Visita agendada com sucesso!' });
     } catch (error) {
       const message = error.response?.data?.message || 'Erro ao salvar a pré-reserva.';
       setFeedback({ type: 'error', message });
     }
-  }, [formData, formIsValid, resetForm, selectedDate, selectedSlot]);
+  }, [formData, formIsValid, selectedDate, selectedSlot]);
 
   useEffect(() => {
     if (pendingReservation && user) {
@@ -311,13 +270,16 @@ const App = () => {
     }
   }, [pendingReservation, user, formIsValid, createReservation]);
 
-  const handleSaveClick = () => {
+  const handleSaveClick = (event) => {
+    event.preventDefault();
     if (!formIsValid) return;
+
     if (!user) {
       setPendingReservation(true);
       setLoginModalOpen(true);
       return;
     }
+
     createReservation();
   };
 
@@ -336,48 +298,61 @@ const App = () => {
     setAdminAccessMessage(null);
   };
 
-  const handleAdminLogin = useCallback(async (loggedUser) => {
-    if (!loggedUser?.credential) {
-      setAdminAccessMessage('Não foi possível validar sua conta Google. Tente novamente.');
-      return;
-    }
-    if ((loggedUser.email || '').toLowerCase() !== normalizedAdminEmail) {
-      setAdminAccessMessage('Este e-mail não está autorizado a acessar o painel.');
-      return;
-    }
-    try {
-      setAdminAccessMessage('Validando acesso...');
-      const { data } = await api.post('/api/admin/login', {
-        credential: loggedUser.credential
-      });
-      setAdminAccessMessage(null);
-      setAdminModalOpen(false);
-      const dashboardUrl = `${backendBaseUrl}/admin/agenda.html#token=${encodeURIComponent(data.token)}`;
-      window.open(dashboardUrl, '_blank', 'noopener,noreferrer');
-    } catch (error) {
-      const message =
-        error.response?.data?.message || 'Falha ao liberar o painel administrativo.';
-      setAdminAccessMessage(message);
-    }
-  }, [backendBaseUrl, normalizedAdminEmail]);
+  const handleAdminLogin = useCallback(
+    async (loggedUser) => {
+      if (!loggedUser?.credential) {
+        setAdminAccessMessage('Não foi possível validar sua conta Google.');
+        return;
+      }
+
+      if ((loggedUser.email || '').toLowerCase() !== normalizedAdminEmail) {
+        setAdminAccessMessage('Acesso não autorizado.');
+        return;
+      }
+
+      try {
+        setAdminAccessMessage('Validando acesso...');
+        const { data } = await api.post('/api/admin/login', {
+          credential: loggedUser.credential
+        });
+        setAdminAccessMessage(null);
+        setAdminModalOpen(false);
+        const dashboardUrl = `${backendBaseUrl}/admin/agenda.html#token=${encodeURIComponent(
+          data.token
+        )}`;
+        window.open(dashboardUrl, '_blank', 'noopener,noreferrer');
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erro no login admin.';
+        setAdminAccessMessage(message);
+      }
+    },
+    [normalizedAdminEmail, backendBaseUrl]
+  );
 
   const handleUpload = async (file) => {
     if (!reservation) return;
+
     const formDataUpload = new FormData();
     formDataUpload.append('arquivo', file);
-
     setUploadState({ loading: true, status: null });
 
     try {
-      const { data } = await api.post(`/api/reservations/${reservation.id}/upload`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const { data } = await api.post(
+        `/api/reservations/${reservation.id}/upload`,
+        formDataUpload,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
       setUploadState({
         loading: false,
-        status: { type: 'success', message: `${data.message} A confirmação final será enviada via WhatsApp.` }
+        status: {
+          type: 'success',
+          message: `${data.message} Confirmação enviada via WhatsApp.`
+        }
       });
     } catch (error) {
-      const message = error.response?.data?.message || 'Falha ao fazer upload. Verifique o arquivo e tente novamente.';
+      const message = error.response?.data?.message || 'Falha ao fazer upload.';
       setUploadState({
         loading: false,
         status: { type: 'error', message }
@@ -388,11 +363,9 @@ const App = () => {
   const handleLogout = () => {
     setUser(null);
     setReservation(null);
-    resetForm();
+    resetForm('');
     setFeedback(null);
     setUploadState({ loading: false, status: null });
-    setLoginModalOpen(false);
-    setPendingReservation(false);
   };
 
   const handleGoogleLogin = (loggedUser) => {
@@ -400,267 +373,382 @@ const App = () => {
     setLoginModalOpen(false);
   };
 
-  const handleSelectDate = (date) => {
-    setSelectedDate(date);
-  };
-
-  const handleSelectSlot = (slot) => {
-    if (!slot?.available) return;
-    setSelectedSlot(slot.time);
-  };
-
-  const handleOpenVistoria = () => {
-    if (vistoriaUnlocked) {
-      setShowVistoria(true);
-      return;
-    }
-    setVistoriaPromptOpen(true);
-  };
-
-  const handleCloseVistoria = () => {
-    setShowVistoria(false);
-  };
-
-  const handleCloseVistoriaPrompt = () => {
-    setVistoriaPromptOpen(false);
-    setVistoriaPassword('');
-    setVistoriaError('');
-  };
-
-  const handleVistoriaAccess = (event) => {
-    event.preventDefault();
-    if (vistoriaPassword === '1111') {
-      setVistoriaUnlocked(true);
-      setShowVistoria(true);
-      setVistoriaPromptOpen(false);
-      setVistoriaPassword('');
-      setVistoriaError('');
-    } else {
-      setVistoriaError('Senha incorreta. Tente novamente.');
-    }
-  };
-
-  if (showVistoria) {
-    return <VistoriaPage onClose={handleCloseVistoria} />;
-  }
-
-  return (
-    <>
-      <Page>
-        <TitleBlock>
-        <HeroCTA>
-          <span className="tagline">TZ Engenharia · Laudos, PMOCs, Auditorias</span>
-          <h1>Agendamento de visitas técnicas</h1>
-          <p>
-            Exclusivo para: PMOCs, Auditorias e Laudos de Engenharia. 
+  if (reservation) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-lg p-8 rounded-3xl shadow-xl text-center">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={40} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Agendamento Confirmado!</h2>
+          <p className="text-slate-600 mb-4">
+            Visita para <strong>{reservation.data}</strong> às{' '}
+            <strong>{reservation.horario}</strong>.
           </p>
-          <Button
-            as="a"
-            href="https://wa.me/5541992741261"
-            target="_blank"
-            rel="noreferrer"
-            style={{ background: '#1f2a37' }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16 3C9.373 3 4 8.373 4 15c0 2.109.576 4.082 1.58 5.773L4 29l8.445-1.554A11.94 11.94 0 0 0 16 27c6.627 0 12-5.373 12-12S22.627 3 16 3Z"
-                stroke="#25D366"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M11.5 11.5c0-.552.448-1 1-1h.667c.424 0 .796.27.934.672l.852 2.556a1 1 0 0 1-.24 1.014l-.631.631a6.5 6.5 0 0 0 2.744 2.744l.631-.631a1 1 0 0 1 1.014-.24l2.556.852c.401.134.671.51.671.935V19.5c0 .552-.448 1-1 1a9.5 9.5 0 0 1-9.5-9.5Z"
-                stroke="#25D366"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Falar no WhatsApp
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleOpenVistoria}>
-            Vistoria
-          </Button>
-        </HeroCTA>
+          <div className="bg-blue-50 p-4 rounded-xl text-sm text-blue-800 mb-6 border border-blue-100">
+            Bloqueio válido até:{' '}
+            {new Date(reservation.expira_em).toLocaleString('pt-BR', {
+              timeZone: 'America/Sao_Paulo'
+            })}
+          </div>
 
-        <ContactGrid>
-          <ContactCard>
-            <strong>TZ Engenharia Técnica</strong>
-            <span>Contato (WhatsApp)</span>
-            <span>(41) 99274-1261</span>
-          </ContactCard>
-        </ContactGrid>
-
-        <HeroTile>
-          <h3>PMOCs, Auditorias e Laudos de Engenharia</h3>
-          <p>Sistema exclusivo para agendamentos</p>
-        </HeroTile>
-      </TitleBlock>
-
-      <Panel>
-        {!reservation && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Agenda de visitas (PACOTES DE DESCONTO PARA LOJISTAS DE SHOPPING)</h2>
-                <p style={{ margin: 0, color: 'var(--gray-500)', fontSize: '0.95rem' }}>
-                  Insira as informações de local
-                </p>
-              </div>
-              {user && (
-                <Button variant="secondary" onClick={handleLogout}>
-                  Encerrar
-                </Button>
-              )}
-            </div>
-
-            <DateSelector
-              dates={dates}
-              selectedDate={selectedDate}
-              onSelect={handleSelectDate}
-            />
-
-            <Section>
-              <h2>Horários disponíveis</h2>
-              {loadingSlots ? (
-                <p>Carregando horários...</p>
-              ) : slots.length > 0 ? (
-                <ChipGroup>
-                  {slots.map((slot) => (
-                    <Chip
-                      key={slot.time}
-                      active={selectedSlot === slot.time}
-                      disabled={!slot.available}
-                      onClick={() => handleSelectSlot(slot)}
-                    >
-                      {slot.time}
-                    </Chip>
-                  ))}
-                </ChipGroup>
-              ) : selectedDate ? (
-                <Feedback type="error">Encontre a melhor opção de horário para você</Feedback>
-              ) : (
-                <p>Selecione uma data para ver os horários.</p>
-              )}
-            </Section>
-
-            <FormFields
-              formData={formData}
-              onChange={handleFormChange}
-              errors={formErrors}
-            />
-
-            {feedback && (
-              <Feedback type={feedback.type}>{feedback.message}</Feedback>
-            )}
-
-            <Button disabled={!formIsValid} onClick={handleSaveClick}>
-              Agendar visita
-            </Button>
-          </>
-        )}
-
-        {reservation && (
-          <>
-            <Feedback type="success">
-              Visita confirmada para {reservation.data} às {reservation.horario}.
-              O bloqueio permanece até{' '}
-              {new Date(reservation.expira_em).toLocaleString('pt-BR', {
-                timeZone: 'America/Sao_Paulo'
-              })}
-              .
-            </Feedback>
-
+          <div className="mb-6 text-left">
             <UploadArea
               onUpload={handleUpload}
               loading={uploadState.loading}
               status={uploadState.status}
             />
+          </div>
 
-            <Button variant="secondary" onClick={() => setReservation(null)}>
-              Voltar à etapa inicial
-            </Button>
-          </>
-        )}
-        </Panel>
-      </Page>
+          <button
+            onClick={() => {
+              setReservation(null);
+              resetForm();
+              setUploadState({ loading: false, status: null });
+              setFeedback(null);
+            }}
+            className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors"
+          >
+            Voltar ao início
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isValidatingAdmin = adminAccessMessage?.toLowerCase().includes('validando');
+
+  return (
+    <div className="min-h-screen bg-[#f0f4f8] font-sans selection:bg-blue-200 text-slate-900">
+      <div className="max-w-7xl mx-auto min-h-screen flex flex-col lg:flex-row">
+        <div
+          className="lg:w-5/12 p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900 text-white lg:rounded-r-[3rem] shadow-2xl z-10"
+          style={{ background: 'linear-gradient(135deg, #050a1d 0%, #0c1d4a 60%, #004aad 100%)' }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/2" />
+
+          <div className="relative z-10">
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <HardHat className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg tracking-wide">TZ ENGENHARIA</h1>
+                <p className="text-blue-200 text-xs tracking-wider font-medium uppercase">
+                  Laudos • PMOCs • Auditorias
+                </p>
+              </div>
+            </div>
+
+            <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
+              Agendamento de <span className="text-blue-400">Visitas Técnicas</span>
+            </h2>
+
+            <p className="text-blue-100 text-lg leading-relaxed mb-8 max-w-md">
+              Sistema exclusivo para agendamento de vistorias de engenharia. Garanta a conformidade do seu estabelecimento.
+            </p>
+
+            <a
+              href="https://wa.me/5541992741261"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-6 hover:bg-white/25 transition-colors cursor-pointer group no-underline text-white shadow-lg shadow-black/20"
+            >
+              <div className="mr-4 bg-green-500/20 p-2 rounded-full">
+                <MessageSquare className="text-green-400" />
+              </div>
+              <div>
+                <p className="text-xs text-blue-200 font-medium uppercase mb-0.5">Dúvidas?</p>
+                <p className="font-semibold flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                  Falar no WhatsApp <ChevronRight size={16} />
+                </p>
+              </div>
+            </a>
+
+          </div>
+
+          <div className="relative z-10 space-y-4 mt-10">
+            <div className="flex items-center justify-between text-sm text-blue-200/80 pt-6 border-t border-white/10">
+              <div>
+                <p className="font-semibold text-white">TZ Engenharia Técnica</p>
+                <p>(41) 99274-1261</p>
+              </div>
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors text-xs font-semibold"
+                >
+                  <LogOut size={14} /> Sair ({user.name || 'Conta'})
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:w-7/12 p-4 lg:p-16 flex items-center justify-center relative">
+          <div className="w-full max-w-xl pb-20 lg:pb-0">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 rounded-2xl p-4 mb-8 flex items-start gap-4 shadow-sm">
+              <div className="bg-orange-100 p-2 rounded-full text-orange-600 mt-1">
+                <Building2 size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-orange-800 text-sm uppercase tracking-wide mb-1">
+                  Lojistas de Shopping
+                </h3>
+                <p className="text-orange-700/80 text-sm leading-relaxed">
+                  Temos <strong>pacotes de desconto</strong>. Preencha abaixo para verificar elegibilidade.
+                </p>
+              </div>
+            </div>
+
+            {feedback && feedback.type === 'error' && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-start gap-3">
+                <AlertCircle className="shrink-0 mt-0.5" size={18} />
+                <p className="text-sm">{feedback.message}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveClick} className="space-y-6">
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <Calendar className="text-blue-600" size={20} />
+                  Data e Hora
+                </h3>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+                    Data da Vistoria
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <select
+                      value={selectedDate}
+                      onChange={(event) => setSelectedDate(event.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent block p-3 pl-10 cursor-pointer hover:bg-white outline-none"
+                    >
+                      <option value="">Selecione um dia disponível...</option>
+                      {dates.map((date) => (
+                        <option key={date} value={date}>
+                          {formatDateLabel(date)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {selectedDate && (
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <p className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                      <Clock size={16} className="text-slate-400" /> Horários Disponíveis:
+                    </p>
+                    {loadingSlots ? (
+                      <p className="text-slate-400 text-sm animate-pulse">Carregando horários...</p>
+                    ) : slots.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {slots.map((slot) => (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            disabled={!slot.available}
+                            onClick={() => setSelectedSlot(slot.time)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                              selectedSlot === slot.time
+                                ? 'bg-blue-600 text-white shadow-md scale-105'
+                                : slot.available
+                                ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                : 'bg-slate-50 text-slate-300 cursor-not-allowed decoration-slate-300 line-through'
+                            }`}
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-orange-500 text-sm bg-orange-50 p-3 rounded-lg">
+                        Nenhum horário para esta data.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <MapPin className="text-blue-600" size={20} />
+                  Dados do Local
+                </h3>
+
+                <div className="grid gap-4">
+                  <InputField
+                    label="Shopping / Local"
+                    placeholder="Selecione o local..."
+                    options={[
+                      'Shopping Curitiba',
+                      'Shopping Estação',
+                      'Shopping Mueller',
+                      'Park Shopping Barigui',
+                      'Jockey Plaza',
+                      'Outro'
+                    ]}
+                    icon={Building2}
+                    name="shopping"
+                    value={formData.shopping}
+                    onChange={handleInputChange}
+                    error={formErrors.shopping}
+                    required
+                  />
+
+                  <InputField
+                    label="Nome Fantasia da Operação"
+                    placeholder="Ex: Loja Exemplo Piso L2"
+                    icon={FileText}
+                    name="nome_fantasia"
+                    value={formData.nome_fantasia}
+                    onChange={handleInputChange}
+                    error={formErrors.nome_fantasia}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <CheckCircle2 className="text-blue-600" size={20} />
+                  Contato do Responsável
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <InputField
+                      label="Nome Completo"
+                      placeholder="Quem receberá o técnico?"
+                      name="nome_contato"
+                      value={formData.nome_contato}
+                      onChange={handleInputChange}
+                      error={formErrors.nome_contato}
+                      required
+                    />
+                  </div>
+                  <InputField
+                    label="WhatsApp"
+                    placeholder="(00) 00000-0000"
+                    icon={Phone}
+                    type="tel"
+                    name="telefone_whatsapp"
+                    value={formData.telefone_whatsapp}
+                    onChange={handleInputChange}
+                    error={formErrors.telefone_whatsapp}
+                    required
+                  />
+                  <InputField
+                    label="E-mail Corporativo"
+                    placeholder="seu@email.com"
+                    icon={Mail}
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    error={formErrors.email}
+                    required
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+                    Observações Adicionais
+                  </label>
+                  <textarea
+                    name="informacoes_adicionais"
+                    value={formData.informacoes_adicionais}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent block p-3 transition-all outline-none min-h-[80px] resize-y hover:bg-white"
+                    placeholder="Alguma restrição de horário ou detalhe de acesso?"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={!formIsValid}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-blue-600/20 transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  Agendar Visita Técnica <ChevronRight size={20} />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <button
+            onClick={handleOpenAdminModal}
+            className="fixed bottom-4 left-4 bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl hover:scale-105 transition-transform flex items-center gap-2 z-50"
+          >
+            <Lock size={12} /> ADMIN
+          </button>
+        </div>
+      </div>
 
       {loginModalOpen && !user && (
-        <LoginModalOverlay onClick={handleCloseLoginModal}>
-          <LoginModalCard onClick={(event) => event.stopPropagation()}>
-            <GoogleAuth onLogin={handleGoogleLogin} />
-            <Button variant="secondary" onClick={handleCloseLoginModal}>
+        <div
+          className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={handleCloseLoginModal}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Finalizar Agendamento</h3>
+              <button onClick={handleCloseLoginModal} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-slate-500 text-center mb-6 text-sm">
+              Faça login com o Google para confirmar sua identidade e salvar o agendamento com segurança.
+            </p>
+            <div className="flex justify-center mb-4">
+              <GoogleAuth onLogin={handleGoogleLogin} />
+            </div>
+            <button
+              onClick={handleCloseLoginModal}
+              className="w-full text-slate-400 text-sm hover:text-slate-600 mt-4 py-2"
+            >
               Cancelar
-            </Button>
-          </LoginModalCard>
-        </LoginModalOverlay>
+            </button>
+          </div>
+        </div>
       )}
 
       {adminModalOpen && (
-        <LoginModalOverlay onClick={handleCloseAdminModal}>
-          <LoginModalCard onClick={(event) => event.stopPropagation()}>
-            <h3 style={{ margin: 0 }}>Acesso restrito</h3>
-            <GoogleAuth
-              onLogin={handleAdminLogin}
-              title={null}
-              description={null}
-              compact
-            />
+        <div
+          className="fixed inset-0 bg-slate-900/80 flex items-center justify-center p-4 z-50"
+          onClick={handleCloseAdminModal}
+        >
+          <div
+            className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Acesso Administrativo</h3>
+            <div className="flex justify-center mb-4">
+              <GoogleAuth onLogin={handleAdminLogin} title={null} description={null} compact />
+            </div>
             {adminAccessMessage && (
-              <AdminStatusMessage
-                $error={!adminAccessMessage.toLowerCase().includes('validando')}
-              >
+              <p className={`text-xs mt-2 ${isValidatingAdmin ? 'text-blue-500' : 'text-red-500'}`}>
                 {adminAccessMessage}
-              </AdminStatusMessage>
+              </p>
             )}
-            <Button variant="secondary" onClick={handleCloseAdminModal}>
-              Fechar
-            </Button>
-          </LoginModalCard>
-        </LoginModalOverlay>
-      )}
-
-      {vistoriaPromptOpen && (
-        <LoginModalOverlay onClick={handleCloseVistoriaPrompt}>
-          <LoginModalCard onClick={(event) => event.stopPropagation()}>
-            <h3 style={{ margin: 0 }}>Área de Vistoria</h3>
-            <p style={{ margin: 0, color: 'var(--gray-500)' }}>
-              Informe a senha para acessar o checklist.
-            </p>
-            <form
-              onSubmit={handleVistoriaAccess}
-              style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+            <button
+              onClick={handleCloseAdminModal}
+              className="text-xs text-slate-400 mt-4 uppercase font-bold tracking-wider"
             >
-              <PasswordInput
-                type="password"
-                placeholder="Digite a senha"
-                value={vistoriaPassword}
-                onChange={(event) => setVistoriaPassword(event.target.value)}
-                autoFocus
-              />
-              {vistoriaError && (
-                <AdminStatusMessage $error>{vistoriaError}</AdminStatusMessage>
-              )}
-              <Button type="submit">Entrar</Button>
-              <Button type="button" variant="secondary" onClick={handleCloseVistoriaPrompt}>
-                Cancelar
-              </Button>
-            </form>
-          </LoginModalCard>
-        </LoginModalOverlay>
+              Fechar
+            </button>
+          </div>
+        </div>
       )}
 
-      <AdminButton type="button" onClick={handleOpenAdminModal} aria-label="Abrir painel admin">
-        admin
-      </AdminButton>
-    </>
+    </div>
   );
 };
 
