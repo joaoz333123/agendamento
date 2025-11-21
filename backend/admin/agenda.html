@@ -5,22 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Painel Interno da Agenda</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap');
-
     :root {
-      font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-      color: #051127;
-      background-color: #edf3ff;
-      --primary: #2962ff;
-      --accent: #00c6ae;
-      --danger: #ff7c6b;
-      --muted: #5c6b80;
-      --surface: #ffffff;
-      --surface-soft: rgba(255, 255, 255, 0.85);
-      --border: #e1e6f0;
-      --shadow-lg: 0 30px 70px rgba(8, 24, 68, 0.18);
-      --shadow-soft: 0 15px 40px rgba(10, 41, 88, 0.14);
-      --radius: 24px;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      color: #0f172a;
+      background-color: #f8fafc;
     }
 
     * {
@@ -30,426 +18,206 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top left, #f1fbfe, #ebf2ff 35%, #fdfefe 70%);
-      color: #051127;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
     }
 
-    h1,
-    h2,
-    h3,
-    h4 {
-      font-weight: 600;
-      margin: 0;
-      color: inherit;
-    }
-
-    button {
-      font-family: inherit;
-    }
-
-    a {
-      color: var(--primary);
-    }
-
-    .app-hero {
-      background: linear-gradient(135deg, #00c6ae 0%, #2f6bff 45%, #0d2c5a 100%);
-      color: #f5fbff;
-      padding: 2.5rem clamp(1.5rem, 5vw, 3.5rem);
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      box-shadow: var(--shadow-lg);
-    }
-
-    .hero-badge {
-      display: inline-flex;
+    .app-header {
+      padding: 1.5rem 2rem;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.2);
-      font-size: 0.8rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .hero-copy {
-      margin: 0.75rem 0 1.5rem;
-      color: rgba(255, 255, 255, 0.85);
-      max-width: 38ch;
-    }
-
-    .hero-date-card {
-      background: rgba(5, 10, 24, 0.35);
-      padding: 1rem 1.25rem;
-      border-radius: 18px;
-      display: inline-flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    }
-
-    .hero-date-label {
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .hero-date-display {
-      font-size: 1.15rem;
-      font-weight: 600;
-    }
-
-    .hero-slot-summary {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.75);
-    }
-
-    .hero-col--actions {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 0.85rem;
-    }
-
-    .hero-pill {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      padding: 0.85rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.85rem;
-    }
-
-    .hero-pill strong {
-      font-size: 1.3rem;
-      font-family: "Roboto Mono", monospace;
-      color: #fff;
-    }
-
-    .hero-buttons {
-      display: flex;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 1rem;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.3);
     }
 
-    .action-primary,
-    .action-secondary {
-      border: none;
-      border-radius: 999px;
-      padding: 0.75rem 1.6rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .app-header p {
+      margin: 0.2rem 0 0;
+      font-size: 0.95rem;
+      color: #cbd5f5;
     }
 
     .action-primary {
-      background: #fff;
-      color: #0e2c53;
-      box-shadow: 0 18px 35px rgba(16, 48, 95, 0.35);
+      background: #34d399;
+      color: #064e3b;
+      border: none;
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(52, 211, 153, 0.35);
     }
 
-    .action-secondary {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.45);
-      color: #fff;
-    }
-
-    .action-primary:hover,
-    .action-secondary:hover {
+    .action-primary:hover {
       transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(52, 211, 153, 0.45);
     }
 
     main {
-      width: min(1500px, 100%);
-      margin: -2.5rem auto 3rem;
-      padding: 0 clamp(1.25rem, 4vw, 3rem) 3rem;
+      flex: 1;
+      padding: 1.5rem;
+      width: min(1400px, 100%);
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
 
-    .day-carousel,
-    .filters-panel,
-    .timeline-card,
-    .detail-panel,
-    .quick-panel {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .day-carousel {
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .carousel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .carousel-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.15rem;
-    }
-
-    .carousel-status {
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .clear-filter {
-      border: none;
-      background: rgba(41, 98, 255, 0.1);
-      color: var(--primary);
-      font-weight: 600;
-      border-radius: 999px;
-      padding: 0.45rem 1rem;
-      cursor: pointer;
-      transition: opacity 0.2s ease;
-    }
-
-    .clear-filter:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .day-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 0.65rem;
-    }
-
-    .day-chip {
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 0.75rem 0.9rem;
-      text-align: left;
-      background: var(--surface-soft);
-      font-weight: 600;
-      color: #132033;
-      cursor: pointer;
-      transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
-    }
-
-    .day-chip span {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-    }
-
-    .day-chip strong {
-      display: block;
-      font-size: 1.15rem;
-      margin-top: 0.2rem;
-    }
-
-    .day-chip.active {
-      background: linear-gradient(135deg, var(--accent), var(--primary));
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 12px 30px rgba(41, 98, 255, 0.25);
-    }
-
-    .filters-panel {
-      padding: 1.5rem;
+    .filters {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 1.2rem;
+      padding: 1rem 1.5rem;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
+      gap: 1rem;
+      box-shadow: 0 20px 45px rgba(51, 65, 85, 0.15);
     }
 
-    .filter-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    .filters label {
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--muted);
-    }
-
-    .filter-field select,
-    .filter-field input {
-      padding: 0.85rem 0.9rem;
-      border-radius: 15px;
-      border: 1px solid var(--border);
-      font-size: 1rem;
-      color: #0b1734;
-      background: #fdfefe;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .filter-field select:focus,
-    .filter-field input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.15);
-    }
-
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 2.6fr) minmax(280px, 1fr) minmax(220px, 0.85fr);
-      gap: 1.5rem;
-    }
-
-    .timeline-card {
-      padding: 1.5rem;
+      color: #475569;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-    }
-
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .card-subtitle {
-      font-size: 0.9rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.2rem;
-    }
-
-    .card-legend {
-      display: flex;
-      flex-wrap: wrap;
       gap: 0.35rem;
     }
 
-    .legend-pill {
-      padding: 0.25rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 700;
-      border: 1px solid rgba(15, 30, 65, 0.08);
+    .filters select,
+    .filters input {
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.75rem;
+      border: 1px solid #cbd5f5;
+      background: #fff;
+      font-size: 1rem;
+      color: #0f172a;
+      transition: border 0.2s;
+    }
+
+    .filters select:focus,
+    .filters input:focus {
+      outline: none;
+      border-color: #6366f1;
     }
 
     .table-wrapper {
-      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1.2rem;
+      padding: 0;
+      box-shadow: 0 24px 64px rgba(15, 23, 42, 0.12);
       overflow: hidden;
-      border: 1px solid var(--border);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.95rem;
-      background: var(--surface);
     }
 
-    thead th {
-      background: linear-gradient(120deg, rgba(41, 98, 255, 0.95), rgba(0, 198, 174, 0.85));
-      color: #fff;
-      padding: 0.9rem 0.75rem;
+    thead {
+      background: linear-gradient(90deg, #0f172a 0%, #312e81 100%);
+      color: #f8fafc;
+    }
+
+    th {
       text-align: left;
+      padding: 0.85rem 0.75rem;
       font-weight: 500;
-      font-size: 0.85rem;
-      letter-spacing: 0.03em;
-    }
-
-    tbody td {
-      padding: 0.8rem 0.75rem;
-      border-bottom: 1px solid #edf0f7;
-      color: #0b1734;
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     tbody tr {
-      transition: background 0.2s ease;
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s;
     }
 
     tbody tr:hover {
-      background: rgba(41, 98, 255, 0.04);
+      background: rgba(99, 102, 241, 0.06);
     }
 
-    .row-selected {
-      background: rgba(0, 198, 174, 0.08);
-      box-shadow: inset 3px 0 0 0 var(--accent);
+    td {
+      padding: 0.85rem 0.75rem;
+      color: #0f172a;
+      vertical-align: top;
     }
 
     td.small {
-      font-size: 0.82rem;
-      color: var(--muted);
+      font-size: 0.85rem;
+      color: #475569;
     }
 
     .status-chip {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.2rem 0.7rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 999px;
       font-size: 0.78rem;
       font-weight: 600;
     }
 
     .status-disponivel {
-      background: #e0fefd;
-      color: #02655d;
+      background: #ecfccb;
+      color: #365314;
     }
 
     .status-aguardando_upload {
-      background: #fff4d4;
-      color: #a56200;
+      background: #fef3c7;
+      color: #92400e;
     }
 
     .status-reservado {
-      background: #e6edff;
-      color: #2b3b94;
+      background: #dcfce7;
+      color: #14532d;
     }
 
     .status-cancelado {
-      background: #ffe0dd;
-      color: #b42318;
+      background: #fee2e2;
+      color: #991b1b;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
 
     .action-btn {
       border: none;
-      border-radius: 14px;
-      padding: 0.4rem 0.85rem;
+      border-radius: 0.75rem;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
     .action-btn.edit-btn {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 12px 25px rgba(41, 98, 255, 0.25);
+      background: #312e81;
+      color: #f8fafc;
+      box-shadow: 0 8px 20px rgba(49, 46, 129, 0.35);
     }
 
     .action-btn.delete-btn {
-      background: rgba(255, 124, 107, 0.12);
-      color: var(--danger);
+      background: #fee2e2;
+      color: #991b1b;
     }
 
     .action-btn:disabled {
-      opacity: 0.45;
+      opacity: 0.5;
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -457,168 +225,26 @@
     .table-empty {
       text-align: center;
       padding: 2rem !important;
-      color: var(--muted);
-    }
-
-    .detail-panel {
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      min-height: 100%;
-    }
-
-    .detail-empty {
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .detail-status {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .detail-slot {
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    .detail-shopping {
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .detail-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0.75rem;
-      margin: 0;
-    }
-
-    .detail-list div {
-      background: #f7f9fd;
-      border-radius: 14px;
-      padding: 0.75rem;
-    }
-
-    .detail-list dt {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0 0 0.35rem;
-      color: var(--muted);
-    }
-
-    .detail-list dd {
-      margin: 0;
-      font-weight: 600;
-      color: #0b1734;
-      word-break: break-word;
-    }
-
-    .detail-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .detail-btn {
-      flex: 1;
-      border: none;
-      border-radius: 12px;
-      padding: 0.6rem 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: rgba(41, 98, 255, 0.12);
-      color: var(--primary);
-      transition: transform 0.2s ease;
-    }
-
-    .detail-btn.danger {
-      background: rgba(255, 124, 107, 0.15);
-      color: var(--danger);
-    }
-
-    .detail-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .quick-panel {
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      min-height: 100%;
-    }
-
-    .quick-panel p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .quick-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .quick-action {
-      border: none;
-      border-radius: 16px;
-      padding: 0.9rem 1rem;
-      text-align: left;
-      font-weight: 600;
-      background: #f6f7fb;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      color: #0b1734;
-    }
-
-    .quick-action.primary {
-      background: linear-gradient(120deg, var(--accent), var(--primary));
-      color: #fff;
-      box-shadow: 0 18px 40px rgba(41, 98, 255, 0.25);
-    }
-
-    .quick-action:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
-
-    .quick-action:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .quick-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      border-radius: 14px;
-      background: #f7f9fd;
-      font-weight: 600;
+      color: #475569;
     }
 
     dialog::backdrop {
-      background: rgba(5, 10, 24, 0.55);
+      background: rgba(15, 23, 42, 0.55);
     }
 
     dialog {
       border: none;
-      border-radius: 1.3rem;
+      border-radius: 1.2rem;
       padding: 0;
-      width: min(760px, 90%);
-      box-shadow: var(--shadow-lg);
+      width: min(720px, 90%);
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
       overflow: hidden;
     }
 
     .dialog-head {
-      background: linear-gradient(135deg, var(--primary), #0f2d63);
-      color: #fff;
-      padding: 1.4rem 1.5rem;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 1.2rem 1.5rem;
     }
 
     .dialog-body {
@@ -637,14 +263,14 @@
       flex-direction: column;
       gap: 0.35rem;
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #475569;
     }
 
     .form-control input,
     .form-control select,
     .form-control textarea {
-      border: 1px solid var(--border);
-      border-radius: 0.9rem;
+      border: 1px solid #cbd5f5;
+      border-radius: 0.75rem;
       padding: 0.6rem 0.75rem;
       font-size: 0.95rem;
       color: #0f172a;
@@ -660,8 +286,8 @@
     .form-control input:focus,
     .form-control select:focus,
     .form-control textarea:focus {
-      outline: 2px solid rgba(41, 98, 255, 0.2);
-      border-color: var(--primary);
+      outline: 2px solid #818cf8;
+      border-color: #6366f1;
     }
 
     .form-control input[readonly] {
@@ -680,29 +306,29 @@
 
     .ghost {
       background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
+      border: 1px solid #cbd5f5;
+      color: #475569;
     }
 
     .form-message {
       font-size: 0.9rem;
-      color: var(--danger);
+      color: #dc2626;
     }
 
     .toast {
       position: fixed;
-      top: 1.5rem;
+      bottom: 1.5rem;
       right: 1.5rem;
       padding: 0.9rem 1.2rem;
       border-radius: 0.9rem;
       font-weight: 600;
       color: #fff;
-      background: var(--primary);
+      background: #0f172a;
       opacity: 0;
-      transform: translateY(-20px);
+      transform: translateY(40px);
       pointer-events: none;
       transition: opacity 0.3s ease, transform 0.3s ease;
-      box-shadow: var(--shadow-soft);
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.4);
     }
 
     .toast.show {
@@ -710,99 +336,39 @@
       transform: translateY(0);
     }
 
-    @media (max-width: 1200px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .detail-panel,
-      .quick-panel {
-        min-height: auto;
-      }
-    }
-
     @media (max-width: 900px) {
-      thead th:nth-child(7),
-      thead th:nth-child(8),
-      thead th:nth-child(9),
-      tbody td:nth-child(7),
-      tbody td:nth-child(8),
-      tbody td:nth-child(9) {
-        display: none;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .hero-buttons {
+      .app-header {
         flex-direction: column;
-        width: 100%;
+        align-items: flex-start;
       }
 
-      .action-primary,
-      .action-secondary {
-        width: 100%;
-      }
-
-      .filters-panel {
-        grid-template-columns: 1fr;
+      th:nth-child(7),
+      td:nth-child(7),
+      th:nth-child(8),
+      td:nth-child(8) {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
-  <header class="app-hero">
+  <header class="app-header">
     <div>
-      <span class="hero-badge">Clinique Neo</span>
-      <h1>Agenda diária</h1>
-      <p class="hero-copy">Coordene atendimentos com foco no paciente: visualize horários, detalhe cada contato e execute ações sem perder o contexto.</p>
-      <div class="hero-date-card">
-        <span class="hero-date-label">Hoje</span>
-        <span id="heroCurrentDate" class="hero-date-display">-</span>
-        <span id="heroSlotSummary" class="hero-slot-summary">Carregando agenda...</span>
-      </div>
+      <h1>Agenda - Painel Interno</h1>
+      <p>Consulte e ajuste rapidamente tudo o que está salvo no arquivo JSON.</p>
     </div>
-    <div class="hero-col--actions">
-      <div class="hero-stats">
-        <div class="hero-pill">
-          <span>Confirmados</span>
-          <strong id="statReservado">0</strong>
-        </div>
-        <div class="hero-pill">
-          <span>Em triagem</span>
-          <strong id="statPending">0</strong>
-        </div>
-        <div class="hero-pill">
-          <span>Disponíveis</span>
-          <strong id="statDisponivel">0</strong>
-        </div>
-      </div>
-      <div class="hero-buttons">
-        <button id="refreshButton" class="action-primary" type="button">Recarregar agenda</button>
-        <button id="logoutButton" class="action-secondary" type="button">Trocar acesso</button>
-      </div>
-    </div>
+    <button id="refreshButton" class="action-primary" type="button">Atualizar dados</button>
   </header>
 
   <main>
-    <section class="day-carousel">
-      <div class="carousel-head">
-        <div>
-          <p class="carousel-title">Próximos dias</p>
-          <span id="carouselStatus" class="carousel-status">Aguardando dados da agenda</span>
-        </div>
-        <button id="clearDateFilter" class="clear-filter" type="button" disabled>Limpar filtro</button>
-      </div>
-      <div id="dayCarousel" class="day-list"></div>
-    </section>
-
-    <section class="filters-panel">
-      <label class="filter-field">
+    <section class="filters">
+      <label>
         Data
         <select id="dateFilter">
           <option value="">Todas</option>
         </select>
       </label>
-      <label class="filter-field">
+      <label>
         Status
         <select id="statusFilter">
           <option value="">Todos</option>
@@ -812,78 +378,40 @@
           <option value="cancelado">Cancelado</option>
         </select>
       </label>
-      <label class="filter-field">
+      <label>
         Buscar
         <input
           id="searchFilter"
           type="search"
-          placeholder="Nome, contato, telefone ou e-mail"
+          placeholder="Nome fantasia, contato, telefone ou e-mail"
         />
       </label>
     </section>
 
-    <section class="dashboard-grid">
-      <div class="timeline-card">
-        <div class="card-head">
-          <div>
-            <p class="card-subtitle">Linha do tempo</p>
-            <h2>Horários cadastrados</h2>
-          </div>
-          <div class="card-legend">
-            <span class="legend-pill">Confirmado</span>
-            <span class="legend-pill">Upload pendente</span>
-            <span class="legend-pill">Disponível</span>
-          </div>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Horário</th>
-                <th>Status</th>
-                <th>Shopping / Loja</th>
-                <th>Contato</th>
-                <th>Telefone</th>
-                <th>E-mail</th>
-                <th>Informações</th>
-                <th>Upload</th>
-                <th>Reservado em</th>
-                <th>Expira em</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="agendaTableBody">
-              <tr>
-                <td colspan="12" class="table-empty">Carregando agenda...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <aside class="detail-panel" id="detailPanel">
-        <div class="detail-empty">
-          <h3>Selecione um horário</h3>
-          <p>Os detalhes completos aparecem aqui para você acompanhar cada contato sem sair da linha do tempo.</p>
-        </div>
-      </aside>
-
-      <aside class="quick-panel">
-        <div>
-          <h3>Ações rápidas</h3>
-          <p>Atalhos para as rotinas mais frequentes no painel.</p>
-        </div>
-        <div class="quick-actions">
-          <button id="reserveFirstAvailable" class="quick-action primary" type="button">Reservar primeiro horário disponível</button>
-          <button id="exportAgenda" class="quick-action" type="button">Exportar agenda em CSV</button>
-          <button id="releaseSelectedSlot" class="quick-action" type="button" disabled>Liberar horário selecionado</button>
-        </div>
-        <div class="quick-meta">
-          <span>Slots carregados</span>
-          <strong id="quickTotalSlots">0</strong>
-        </div>
-      </aside>
+    <section class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Status</th>
+            <th>Shopping / Loja</th>
+            <th>Contato</th>
+            <th>Telefone</th>
+            <th>E-mail</th>
+            <th>Informações</th>
+            <th>Upload</th>
+            <th>Reservado em</th>
+            <th>Expira em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="agendaTableBody">
+          <tr>
+            <td colspan="12" class="table-empty">Carregando agenda...</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
   </main>
 
@@ -975,15 +503,10 @@
     (() => {
       'use strict';
 
-      const TOKEN_STORAGE_KEY = 'tz-admin-token';
-      const ADMIN_LOGIN_HINT = 'Use o botão "admin" no site principal e faça login com sua conta autorizada.';
-
       const state = {
         agenda: [],
         dates: [],
-        slots: [],
-        token: null,
-        selectedRowKey: null
+        slots: []
       };
 
       const tableBody = document.getElementById('agendaTableBody');
@@ -991,82 +514,17 @@
       const statusFilter = document.getElementById('statusFilter');
       const searchFilter = document.getElementById('searchFilter');
       const refreshButton = document.getElementById('refreshButton');
-      const logoutButton = document.getElementById('logoutButton');
       const dialog = document.getElementById('editorDialog');
       const dialogTitle = document.getElementById('dialogTitle');
       const form = document.getElementById('editorForm');
       const formMessage = document.getElementById('formMessage');
       const cancelEditBtn = document.getElementById('cancelEditBtn');
       const toast = document.getElementById('toast');
-      const heroCurrentDate = document.getElementById('heroCurrentDate');
-      const heroSlotSummary = document.getElementById('heroSlotSummary');
-      const statReservado = document.getElementById('statReservado');
-      const statPending = document.getElementById('statPending');
-      const statDisponivel = document.getElementById('statDisponivel');
-      const dayCarousel = document.getElementById('dayCarousel');
-      const carouselStatus = document.getElementById('carouselStatus');
-      const clearDateButton = document.getElementById('clearDateFilter');
-      const detailPanel = document.getElementById('detailPanel');
-      const quickTotalSlots = document.getElementById('quickTotalSlots');
-      const quickReserveBtn = document.getElementById('reserveFirstAvailable');
-      const quickExportBtn = document.getElementById('exportAgenda');
-      const quickReleaseSelectedBtn = document.getElementById('releaseSelectedSlot');
-
-      function captureTokenFromHash() {
-        const hash = window.location.hash.replace(/^#/, '');
-        const params = new URLSearchParams(hash);
-        const token = params.get('token');
-        if (token) {
-          sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
-          const cleanUrl = window.location.pathname + window.location.search;
-          window.history.replaceState(null, '', cleanUrl);
-          return token;
-        }
-        return null;
-      }
-
-      function restoreToken() {
-        return sessionStorage.getItem(TOKEN_STORAGE_KEY);
-      }
-
-      function clearToken() {
-        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-        state.token = null;
-      }
-
-      function ensureAuthorized(showAlert = false) {
-        if (state.token) return true;
-        setTableMessage(`Acesso restrito. ${ADMIN_LOGIN_HINT}`);
-        if (showAlert) {
-          showToast('Acesso restrito. Abra o painel pelo botão "admin".', true);
-        }
-        return false;
-      }
-
-      function handleUnauthorized() {
-        clearToken();
-        ensureAuthorized(true);
-      }
-
-      state.token = captureTokenFromHash() || restoreToken();
 
       function formatDate(dateStr) {
         if (!dateStr) return '-';
         const [year, month, day] = dateStr.split('-');
         return `${day}/${month}/${year}`;
-      }
-
-      function formatChipDate(dateStr) {
-        if (!dateStr) return '--';
-        const [year, month, day] = dateStr.split('-');
-        return `${day}/${month}`;
-      }
-
-      function formatWeekday(dateStr) {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        if (Number.isNaN(date.getTime())) return '';
-        return date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
       }
 
       function formatDateTime(value) {
@@ -1085,16 +543,6 @@
         if (Number.isNaN(date.getTime())) return '';
         const pad = (num) => String(num).padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-      }
-
-      function escapeHtml(value) {
-        if (value === null || value === undefined) return '';
-        return String(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
       }
 
       function statusLabel(status) {
@@ -1116,10 +564,6 @@
         cell.textContent = message;
         row.appendChild(cell);
         tableBody.appendChild(row);
-        state.selectedRowKey = null;
-        renderDetailPanel(null);
-        highlightSelectedRow();
-        updateHeroSummary();
       }
 
       function populateDateFilter(selected) {
@@ -1135,7 +579,6 @@
         if (currentValue && state.dates.includes(currentValue)) {
           dateFilter.value = currentValue;
         }
-        buildDayCarousel();
       }
 
       function hydrateAgenda(list) {
@@ -1150,73 +593,10 @@
         }));
       }
 
-      function updateHeroSummary() {
-        const now = new Date();
-        if (heroCurrentDate) {
-          heroCurrentDate.textContent = now.toLocaleDateString('pt-BR', {
-            weekday: 'long',
-            day: '2-digit',
-            month: 'short'
-          });
-        }
-        const total = state.agenda.length;
-        if (heroSlotSummary) {
-          heroSlotSummary.textContent = total ? `${total} horário(s) sincronizados` : 'Nenhum horário carregado';
-        }
-        if (quickTotalSlots) {
-          quickTotalSlots.textContent = total;
-        }
-        const stats = state.agenda.reduce(
-          (acc, item) => {
-            acc[item.status] = (acc[item.status] ?? 0) + 1;
-            return acc;
-          },
-          {}
-        );
-        if (statReservado) statReservado.textContent = stats.reservado ?? 0;
-        if (statPending) statPending.textContent = stats.aguardando_upload ?? 0;
-        if (statDisponivel) statDisponivel.textContent = stats.disponivel ?? 0;
-      }
-
-      function buildDayCarousel() {
-        if (!dayCarousel) return;
-        dayCarousel.innerHTML = '';
-        if (carouselStatus) {
-          const totalDays = state.dates.length;
-          carouselStatus.textContent = totalDays
-            ? `${totalDays} dia(s) disponíveis na agenda`
-            : 'Nenhuma data disponível';
-        }
-        if (clearDateButton) {
-          clearDateButton.disabled = !dateFilter.value;
-        }
-        state.dates.slice(0, 8).forEach((date) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = `day-chip${dateFilter.value === date ? ' active' : ''}`;
-          button.innerHTML = `<span>${formatWeekday(date)}</span><strong>${formatChipDate(date)}</strong>`;
-          button.addEventListener('click', () => {
-            dateFilter.value = dateFilter.value === date ? '' : date;
-            renderTable();
-            buildDayCarousel();
-          });
-          dayCarousel.appendChild(button);
-        });
-      }
-
       async function loadAgenda() {
-        if (!ensureAuthorized()) return;
         setTableMessage('Carregando agenda...');
         try {
-          const response = await fetch('/api/admin/agenda', {
-            headers: {
-              Authorization: `Bearer ${state.token}`
-            }
-          });
-          if (response.status === 401 || response.status === 403) {
-            handleUnauthorized();
-            return;
-          }
+          const response = await fetch('/api/admin/agenda');
           if (!response.ok) {
             throw new Error('Falha ao carregar');
           }
@@ -1251,94 +631,11 @@
         return searchable.includes(query);
       }
 
-      function getSelectedRow() {
-        if (!state.selectedRowKey) return null;
-        return state.agenda.find((item) => item.rowKey === state.selectedRowKey) ?? null;
-      }
-
-      function highlightSelectedRow() {
-        const rows = tableBody.querySelectorAll('tr[data-row-key]');
-        rows.forEach((row) => {
-          if (row.dataset.rowKey === state.selectedRowKey) {
-            row.classList.add('row-selected');
-          } else {
-            row.classList.remove('row-selected');
-          }
-        });
-      }
-
-      function renderDetailPanel(row) {
-        if (!detailPanel) return;
-        if (quickReleaseSelectedBtn) {
-          quickReleaseSelectedBtn.disabled = !row || !row.id;
-        }
-        if (!row) {
-          detailPanel.innerHTML = `
-            <div class="detail-empty">
-              <h3>Selecione um horário</h3>
-              <p>Os detalhes completos aparecem aqui para você acompanhar cada contato sem sair da linha do tempo.</p>
-            </div>
-          `;
-          return;
-        }
-        const upload = row.upload_arquivo || {};
-        const uploadLabel = upload.url
-          ? `<a href="${escapeHtml(upload.url)}" target="_blank" rel="noreferrer">${escapeHtml(upload.tipo ? upload.tipo.toUpperCase() : 'Arquivo')}${upload.tamanho_mb ? ` (${escapeHtml(upload.tamanho_mb)} MB)` : ''}</a>`
-          : '-';
-        detailPanel.innerHTML = `
-          <div class="detail-status">
-            <span class="status-chip status-${row.status}">${statusLabel(row.status)}</span>
-            <span class="detail-slot">${formatDate(row.data)} · ${row.horario}</span>
-          </div>
-          <h3>${escapeHtml(row.nome_fantasia || 'Sem nome fantasia')}</h3>
-          <p class="detail-shopping">${escapeHtml(row.shopping || 'Sem shopping informado')}</p>
-          <dl class="detail-list">
-            <div>
-              <dt>Contato</dt>
-              <dd>${escapeHtml(row.nome_contato || '-')}</dd>
-            </div>
-            <div>
-              <dt>WhatsApp</dt>
-              <dd>${escapeHtml(row.telefone_whatsapp || '-')}</dd>
-            </div>
-            <div>
-              <dt>E-mail</dt>
-              <dd>${escapeHtml(row.email || '-')}</dd>
-            </div>
-            <div>
-              <dt>Notas</dt>
-              <dd>${escapeHtml(row.informacoes_adicionais || '-')}</dd>
-            </div>
-            <div>
-              <dt>Upload</dt>
-              <dd>${uploadLabel}</dd>
-            </div>
-            <div>
-              <dt>Reservado em</dt>
-              <dd>${formatDateTime(row.data_hora_reserva)}</dd>
-            </div>
-            <div>
-              <dt>Expira em</dt>
-              <dd>${formatDateTime(row.expira_em)}</dd>
-            </div>
-          </dl>
-          <div class="detail-actions">
-            <button class="detail-btn" type="button" data-action="edit" data-row-key="${row.rowKey}">Editar</button>
-            ${row.id ? `<button class="detail-btn danger" type="button" data-action="release" data-id="${row.id}" data-row-key="${row.rowKey}">Liberar</button>` : ''}
-          </div>
-        `;
-      }
-
       function renderTable() {
-        updateHeroSummary();
         const rows = state.agenda
           .slice()
           .sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario))
           .filter(applyFilters);
-
-        if (state.selectedRowKey && !rows.some((item) => item.rowKey === state.selectedRowKey)) {
-          state.selectedRowKey = null;
-        }
 
         if (!rows.length) {
           setTableMessage('Nenhum registro encontrado para os filtros selecionados.');
@@ -1435,7 +732,6 @@
             deleteBtn.type = 'button';
             deleteBtn.className = 'action-btn delete-btn';
             deleteBtn.dataset.id = item.id;
-            deleteBtn.dataset.rowKey = item.rowKey;
             deleteBtn.textContent = 'Liberar';
             actionCell.appendChild(deleteBtn);
           }
@@ -1443,13 +739,6 @@
           tr.appendChild(actionCell);
           tableBody.appendChild(tr);
         });
-
-        if (!state.selectedRowKey && rows.length) {
-          state.selectedRowKey = rows[0].rowKey;
-        }
-
-        highlightSelectedRow();
-        renderDetailPanel(getSelectedRow());
       }
 
       function openEditor(row) {
@@ -1483,10 +772,6 @@
 
       async function submitForm(event) {
         event.preventDefault();
-        if (!ensureAuthorized(true)) {
-          formMessage.textContent = 'Acesso expirado. Abra novamente pelo botão "admin".';
-          return;
-        }
         formMessage.textContent = '';
         const formData = new FormData(form);
         const payload = {
@@ -1515,18 +800,9 @@
         try {
           const response = await fetch('/api/admin/agenda', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${state.token}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-
-          if (response.status === 401 || response.status === 403) {
-            handleUnauthorized();
-            formMessage.textContent = 'Sessão expirada. Abra novamente pelo botão "admin".';
-            return;
-          }
 
           if (!response.ok) {
             const errorPayload = await response.json().catch(() => ({}));
@@ -1551,32 +827,16 @@
         formMessage.textContent = '';
       }
 
-      async function handleDelete(id, rowKey) {
+      async function handleDelete(id) {
         if (!id) return;
-        if (!ensureAuthorized(true)) return;
         const confirmed = window.confirm('Confirma liberar este horário e remover o registro do JSON?');
         if (!confirmed) return;
 
         try {
-          const response = await fetch(`/api/admin/agenda/${id}`, {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${state.token}`
-            }
-          });
-
-          if (response.status === 401 || response.status === 403) {
-            handleUnauthorized();
-            return;
-          }
-
+          const response = await fetch(`/api/admin/agenda/${id}`, { method: 'DELETE' });
           if (!response.ok) {
             const payload = await response.json().catch(() => ({}));
             throw new Error(payload.message || 'Erro ao remover agendamento.');
-          }
-          if (rowKey && state.selectedRowKey === rowKey) {
-            state.selectedRowKey = null;
-            renderDetailPanel(null);
           }
           await loadAgenda();
           showToast('Horário liberado');
@@ -1585,92 +845,12 @@
         }
       }
 
-      function openFirstAvailableSlot() {
-        if (!ensureAuthorized(true)) return;
-        const slot = state.agenda.find((item) => item.status === 'disponivel');
-        if (!slot) {
-          showToast('Nenhum horário disponível para reserva.', true);
-          return;
-        }
-        state.selectedRowKey = slot.rowKey;
-        highlightSelectedRow();
-        renderDetailPanel(slot);
-        openEditor(slot);
-      }
-
-      function exportAgendaToCsv() {
-        if (!state.agenda.length) {
-          showToast('Não há dados para exportar.', true);
-          return;
-        }
-        const headers = [
-          'Data',
-          'Horário',
-          'Status',
-          'Shopping',
-          'Nome fantasia',
-          'Contato',
-          'Telefone',
-          'E-mail',
-          'Informações',
-          'Upload URL',
-          'Upload tipo',
-          'Upload tamanho',
-          'Reservado em',
-          'Expira em'
-        ];
-        const csvRows = [headers.join(';')];
-        state.agenda.forEach((item) => {
-          const upload = item.upload_arquivo || {};
-          const row = [
-            formatDate(item.data),
-            item.horario,
-            statusLabel(item.status),
-            item.shopping || '',
-            item.nome_fantasia || '',
-            item.nome_contato || '',
-            item.telefone_whatsapp || '',
-            item.email || '',
-            item.informacoes_adicionais || '',
-            upload.url || '',
-            upload.tipo || '',
-            upload.tamanho_mb || '',
-            formatDateTime(item.data_hora_reserva),
-            formatDateTime(item.expira_em)
-          ].map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`);
-          csvRows.push(row.join(';'));
-        });
-        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const stamp = new Date().toISOString().split('T')[0];
-        link.download = `agenda-${stamp}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        showToast('Arquivo CSV gerado');
-      }
-
-      function releaseSelectedSlot() {
-        const row = getSelectedRow();
-        if (!row || !row.id) {
-          showToast('Selecione um agendamento reservado para liberar.', true);
-          return;
-        }
-        handleDelete(row.id, row.rowKey);
-      }
-
       function handleTableClick(event) {
         const editBtn = event.target.closest('.edit-btn');
         if (editBtn) {
           const { rowKey } = editBtn.dataset;
           const row = state.agenda.find((item) => item.rowKey === rowKey);
           if (row) {
-            state.selectedRowKey = row.rowKey;
-            highlightSelectedRow();
-            renderDetailPanel(row);
             openEditor(row);
           }
           return;
@@ -1678,21 +858,13 @@
 
         const deleteBtn = event.target.closest('.delete-btn');
         if (deleteBtn) {
-          handleDelete(deleteBtn.dataset.id, deleteBtn.dataset.rowKey);
-          return;
-        }
-
-        const rowElement = event.target.closest('tr[data-row-key]');
-        if (rowElement) {
-          state.selectedRowKey = rowElement.dataset.rowKey;
-          highlightSelectedRow();
-          renderDetailPanel(getSelectedRow());
+          handleDelete(deleteBtn.dataset.id);
         }
       }
 
       function showToast(message, isError = false) {
         toast.textContent = message;
-        toast.style.background = isError ? '#ff7c6b' : 'var(--primary)';
+        toast.style.background = isError ? '#dc2626' : '#0f172a';
         toast.classList.add('show');
         clearTimeout(showToast.timeoutId);
         showToast.timeoutId = setTimeout(() => {
@@ -1700,36 +872,12 @@
         }, 3500);
       }
 
-      function logoutFromPanel() {
-        clearToken();
-        state.agenda = [];
-        state.dates = [];
-        state.slots = [];
-        state.selectedRowKey = null;
-        setTableMessage(`Sessão encerrada. ${ADMIN_LOGIN_HINT}`);
-        buildDayCarousel();
-        updateHeroSummary();
-        showToast('Sessão encerrada.');
-      }
-
-      if (clearDateButton) {
-        clearDateButton.addEventListener('click', () => {
-          dateFilter.value = '';
-          renderTable();
-          buildDayCarousel();
-        });
-      }
-
-      dateFilter.addEventListener('change', () => {
-        renderTable();
-        buildDayCarousel();
-      });
+      dateFilter.addEventListener('change', renderTable);
       statusFilter.addEventListener('change', renderTable);
       searchFilter.addEventListener('input', () => {
         renderTable();
       });
       refreshButton.addEventListener('click', loadAgenda);
-      logoutButton.addEventListener('click', logoutFromPanel);
       tableBody.addEventListener('click', handleTableClick);
       form.addEventListener('submit', submitForm);
       cancelEditBtn.addEventListener('click', closeDialog);
@@ -1737,39 +885,8 @@
         event.preventDefault();
         closeDialog();
       });
-      if (detailPanel) {
-        detailPanel.addEventListener('click', (event) => {
-          const button = event.target.closest('[data-action]');
-          if (!button) return;
-          const rowKey = button.dataset.rowKey;
-          const row = state.agenda.find((item) => item.rowKey === rowKey);
-          if (!row) return;
-          if (button.dataset.action === 'edit') {
-            state.selectedRowKey = row.rowKey;
-            highlightSelectedRow();
-            renderDetailPanel(row);
-            openEditor(row);
-          }
-          if (button.dataset.action === 'release') {
-            handleDelete(button.dataset.id, row.rowKey);
-          }
-        });
-      }
-      if (quickReserveBtn) {
-        quickReserveBtn.addEventListener('click', openFirstAvailableSlot);
-      }
-      if (quickExportBtn) {
-        quickExportBtn.addEventListener('click', exportAgendaToCsv);
-      }
-      if (quickReleaseSelectedBtn) {
-        quickReleaseSelectedBtn.addEventListener('click', releaseSelectedSlot);
-      }
 
-      if (state.token) {
-        loadAgenda();
-      } else {
-        ensureAuthorized();
-      }
+      loadAgenda();
     })();
   </script>
 </body>
