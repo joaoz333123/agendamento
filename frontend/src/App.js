@@ -90,6 +90,75 @@ const formatDateLabel = (value) => {
   });
 };
 
+const WEEK_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+const buildCalendarMonths = (dates = []) => {
+  if (!dates.length) {
+    return [];
+  }
+
+  const uniqueDates = Array.from(new Set(dates));
+  const availableSet = new Set(uniqueDates);
+
+  const parsed = uniqueDates
+    .map((date) => {
+      const parsedDate = new Date(`${date}T12:00:00`);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return null;
+      }
+      return {
+        value: date,
+        year: parsedDate.getFullYear(),
+        month: parsedDate.getMonth()
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year));
+
+  const grouped = parsed.reduce((acc, item) => {
+    const key = `${item.year}-${item.month}`;
+    if (!acc[key]) {
+      acc[key] = { year: item.year, month: item.month };
+    }
+    return acc;
+  }, {});
+
+  return Object.values(grouped)
+    .sort((a, b) => (a.year === b.year ? a.month - b.month : a.year - b.year))
+    .map(({ year, month }) => {
+      const firstDay = new Date(year, month, 1);
+      const leadingEmpty = firstDay.getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const days = [];
+
+    for (let index = 0; index < leadingEmpty; index += 1) {
+      days.push(null);
+    }
+
+    for (let day = 1; day <= totalDays; day += 1) {
+      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const weekDay = new Date(year, month, day).getDay();
+      days.push({
+        date: dateString,
+        label: day,
+        isSunday: weekDay === 0,
+        isAvailable: availableSet.has(dateString)
+      });
+    }
+
+    const title = new Date(year, month, 1).toLocaleDateString('pt-BR', {
+      month: 'long',
+      year: 'numeric'
+    });
+
+      return {
+        id: `${year}-${month}`,
+        title,
+        days
+      };
+    });
+};
+
 const App = () => {
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
@@ -115,6 +184,7 @@ const App = () => {
     const base = api.defaults?.baseURL || process.env.REACT_APP_API_URL || 'http://localhost:4000';
     return base.endsWith('/') ? base.slice(0, -1) : base;
   }, []);
+  const calendarMonths = useMemo(() => buildCalendarMonths(dates), [dates]);
 
   const resetForm = useCallback((defaultEmail = '') => {
     setSelectedDate('');
@@ -373,14 +443,11 @@ const App = () => {
   const isValidatingAdmin = adminAccessMessage?.toLowerCase().includes('validando');
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] font-sans selection:bg-blue-200 text-slate-900">
-      <div className="max-w-7xl mx-auto min-h-screen flex flex-col lg:flex-row">
-        <div
-          className="lg:w-5/12 p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900 text-white lg:rounded-r-[3rem] shadow-2xl z-10"
-          style={{ background: 'linear-gradient(135deg, #050a1d 0%, #0c1d4a 60%, #004aad 100%)' }}
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/2" />
+    <div className="min-h-screen bg-[#030b1d] font-sans selection:bg-blue-200 text-white">
+      <div className="max-w-4xl mx-auto min-h-screen px-4 py-10 flex flex-col gap-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900 rounded-[2.75rem] p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
           <div className="relative z-10">
             <div className="flex items-center space-x-3 mb-8">
@@ -395,11 +462,10 @@ const App = () => {
               </div>
             </div>
 
-            <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-              Agendamento de <span className="text-blue-400">Visitas Técnicas</span>
+            <h2 className="text-4xl font-bold leading-tight mb-4">
+              Agendamento de <span className="text-blue-300">Visitas Técnicas</span>
             </h2>
-
-            <p className="text-blue-100 text-lg leading-relaxed mb-8 max-w-md">
+            <p className="text-blue-100 text-base leading-relaxed mb-6">
               Sistema exclusivo para agendamento de vistorias de engenharia. Garanta a conformidade do seu estabelecimento.
             </p>
 
@@ -407,34 +473,20 @@ const App = () => {
               href="https://wa.me/5541992741261"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-6 hover:bg-white/25 transition-colors cursor-pointer group no-underline text-white shadow-lg shadow-black/20"
+              className="inline-flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl px-6 py-3 mb-6 hover:bg-white/25 transition-colors cursor-pointer group no-underline text-white shadow-lg shadow-black/20"
             >
-              <div className="mr-4 bg-green-500/20 p-2 rounded-full">
-                <MessageSquare className="text-green-400" />
+              <div className="mr-3 bg-green-500/20 p-2 rounded-full">
+                <MessageSquare className="text-green-400" size={18} />
               </div>
-              <div>
-                <p className="text-xs text-blue-200 font-medium uppercase mb-0.5">Dúvidas?</p>
+              <div className="text-left">
+                <p className="text-[11px] text-blue-200 font-medium uppercase mb-0.5">Dúvidas?</p>
                 <p className="font-semibold flex items-center gap-2 group-hover:translate-x-1 transition-transform">
                   Falar no WhatsApp <ChevronRight size={16} />
                 </p>
               </div>
             </a>
 
-          </div>
-
-          <div className="relative z-10 space-y-4 mt-10">
-            <div className="flex items-center justify-between text-sm text-blue-200/80 pt-6 border-t border-white/10">
-              <div>
-                <p className="font-semibold text-white">TZ Engenharia Técnica</p>
-                <p>(41) 99274-1261</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:w-7/12 p-4 lg:p-16 flex items-center justify-center relative">
-          <div className="w-full max-w-xl pb-20 lg:pb-0">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 rounded-2xl p-4 mb-8 flex items-start gap-4 shadow-sm">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-100 rounded-2xl p-4 mb-6 flex items-start gap-3 text-slate-900">
               <div className="bg-orange-100 p-2 rounded-full text-orange-600 mt-1">
                 <Building2 size={20} />
               </div>
@@ -455,8 +507,8 @@ const App = () => {
               </div>
             )}
 
-            <form onSubmit={handleSaveClick} className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <form onSubmit={handleSaveClick} className="space-y-6 bg-white text-slate-900 rounded-3xl shadow-xl border border-slate-100 p-6">
+              <div>
                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                   <Calendar className="text-blue-600" size={20} />
                   Data e Hora
@@ -466,21 +518,60 @@ const App = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
                     Data da Vistoria
                   </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <select
-                      value={selectedDate}
-                      onChange={(event) => setSelectedDate(event.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent block p-3 pl-10 cursor-pointer hover:bg-white outline-none"
-                    >
-                      <option value="">Selecione um dia disponível...</option>
-                      {dates.map((date) => (
-                        <option key={date} value={date}>
-                          {formatDateLabel(date)}
-                        </option>
+                  <p className="text-xs text-slate-500 mb-3 ml-1">
+                    Clique em um dia disponível. Domingos ficam indisponíveis automaticamente.
+                  </p>
+                  {calendarMonths.length === 0 ? (
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 text-center text-sm text-slate-400">
+                      Carregando calendário...
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {calendarMonths.map((month) => (
+                        <div key={month.id} className="border border-slate-100 rounded-2xl p-4 bg-slate-50">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide mb-3">
+                            <Calendar size={16} className="text-blue-500" />
+                            {month.title}
+                          </div>
+                          <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-slate-400 mb-2">
+                            {WEEK_DAYS.map((day) => (
+                              <span key={`${month.id}-${day}`}>{day}</span>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-1">
+                            {month.days.map((day, index) =>
+                              day ? (
+                                <button
+                                  key={day.date}
+                                  type="button"
+                                  onClick={() => day.isAvailable && !day.isSunday && setSelectedDate(day.date)}
+                                  disabled={!day.isAvailable || day.isSunday}
+                                  className={`h-10 rounded-xl text-sm font-medium transition-all border ${
+                                    day.isSunday
+                                      ? 'bg-slate-100 text-slate-300 border-transparent cursor-not-allowed'
+                                      : day.isAvailable
+                                      ? selectedDate === day.date
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                                        : 'bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600'
+                                      : 'bg-slate-50 text-slate-300 border-dashed border-slate-200 cursor-not-allowed'
+                                  }`}
+                                >
+                                  {day.label}
+                                </button>
+                              ) : (
+                                <div key={`${month.id}-blank-${index}`} className="h-10" />
+                              )
+                            )}
+                          </div>
+                        </div>
                       ))}
-                    </select>
-                  </div>
+                    </div>
+                  )}
+                  {selectedDate && (
+                    <p className="text-xs text-blue-600 font-medium mt-3 ml-1">
+                      Selecionado: {formatDateLabel(selectedDate)}
+                    </p>
+                  )}
                 </div>
 
                 {selectedDate && (
@@ -519,7 +610,7 @@ const App = () => {
                 )}
               </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <div>
                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                   <MapPin className="text-blue-600" size={20} />
                   Dados do Local
@@ -558,7 +649,7 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <div>
                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                   <CheckCircle2 className="text-blue-600" size={20} />
                   Contato do Responsável
@@ -624,15 +715,22 @@ const App = () => {
                 </button>
               </div>
             </form>
-          </div>
 
-          <button
-            onClick={handleOpenAdminModal}
-            className="fixed bottom-4 left-4 bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl hover:scale-105 transition-transform flex items-center gap-2 z-50"
-          >
-            <Lock size={12} /> ADMIN
-          </button>
+            <div className="flex items-center justify-between text-sm text-blue-200/80 mt-10 pt-6 border-t border-white/10">
+              <div>
+                <p className="font-semibold text-white">TZ Engenharia Técnica</p>
+                <p>(41) 99274-1261</p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <button
+          onClick={handleOpenAdminModal}
+          className="fixed bottom-4 left-4 bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl hover:scale-105 transition-transform flex items-center gap-2 z-50"
+        >
+          <Lock size={12} /> ADMIN
+        </button>
       </div>
 
       {adminModalOpen && (
