@@ -1,17 +1,21 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
   ClipboardCheck,
+  Copy,
   Loader2,
+  RefreshCcw,
   Save
 } from 'lucide-react';
 import api from '../api';
 
 const AUTO_SAVE_DELAY = 800;
 const STORAGE_KEY = 'checklist3991SessionId';
+const AUTO_RETRY_DELAY = 5000;
+const SESSION_QUERY_KEYS = ['sessionId', 'session', 'sessao'];
 
 const formatDateTime = (value) => {
   if (!value) return '';
@@ -26,6 +30,34 @@ const formatDateTime = (value) => {
     hour: '2-digit',
     minute: '2-digit'
   });
+};
+
+const normalizeSessionId = (value = '') => value.trim();
+
+const getSessionIdFromUrl = () => {
+  if (typeof window === 'undefined') return '';
+  const params = new URLSearchParams(window.location.search);
+  for (const key of SESSION_QUERY_KEYS) {
+    const candidate = normalizeSessionId(params.get(key) || '');
+    if (candidate) return candidate;
+  }
+  return '';
+};
+
+const persistSessionIdToUrl = (sessionId) => {
+  if (typeof window === 'undefined' || !sessionId) return '';
+  const url = new URL(window.location.href);
+  url.searchParams.set('sessionId', sessionId);
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, '', nextUrl);
+  return url.toString();
+};
+
+const buildSessionLink = (sessionId) => {
+  if (typeof window === 'undefined' || !sessionId) return '';
+  const url = new URL(window.location.href);
+  url.searchParams.set('sessionId', sessionId);
+  return url.toString();
 };
 
 const ChecklistField = ({ field, value, onChange }) => {
@@ -77,8 +109,26 @@ const Checklist3991Page = () => {
   const [loadError, setLoadError] = useState('');
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle');
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [copyStatus, setCopyStatus] = useState('');
   const skipNextSaveRef = useRef(true);
   const initializedRef = useRef(false);
+  const autoSaveTimeoutRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
+  const persistAnswersRef = useRef(null);
+
+  const clearAutoSaveTimeout = useCallback(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearRetryTimeout = useCallback(() => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     setLoadingChecklist(true);
@@ -97,15 +147,31 @@ const Checklist3991Page = () => {
   useEffect(() => {
     const storedId =
       typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
+    const querySessionId = getSessionIdFromUrl();
+
+    if (querySessionId) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(STORAGE_KEY, querySessionId);
+      }
+      persistSessionIdToUrl(querySessionId);
+      setSessionId(querySessionId);
+      return;
+    }
+
     if (storedId) {
+      persistSessionIdToUrl(storedId);
       setSessionId(storedId);
       return;
     }
+
     const fallbackId =
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
         : `sessao-${Date.now()}`;
-    window.localStorage.setItem(STORAGE_KEY, fallbackId);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, fallbackId);
+    }
+    persistSessionIdToUrl(fallbackId);
     setSessionId(fallbackId);
   }, []);
 
@@ -132,6 +198,28 @@ const Checklist3991Page = () => {
       });
   }, [sessionId]);
 
+  const triggerSave = useCallback(async () => {
+    if (!sessionId || !structure) return;
+    clearRetryTimeout();
+    setAutoSaveStatus('saving');
+    try {
+      const { data } = await api.put('/api/checklists/3991/responses', { sessionId, answers });
+      setLastSavedAt(data.savedAt || new Date().toISOString());
+      setAutoSaveStatus('success');
+    } catch {
+      setAutoSaveStatus('error');
+      retryTimeoutRef.current = setTimeout(() => {
+        if (persistAnswersRef.current) {
+          persistAnswersRef.current();
+        }
+      }, AUTO_RETRY_DELAY);
+    }
+  }, [answers, clearRetryTimeout, sessionId, structure]);
+
+  useEffect(() => {
+    persistAnswersRef.current = triggerSave;
+  }, [triggerSave]);
+
   useEffect(() => {
     if (!sessionId || !structure || !initializedRef.current) {
       return;
@@ -142,28 +230,57 @@ const Checklist3991Page = () => {
       return;
     }
 
+    clearAutoSaveTimeout();
+    clearRetryTimeout();
     setAutoSaveStatus('pending');
-    const handler = setTimeout(() => {
-      setAutoSaveStatus('saving');
-      api
-        .put('/api/checklists/3991/responses', { sessionId, answers })
-        .then(({ data }) => {
-          setLastSavedAt(data.savedAt || new Date().toISOString());
-          setAutoSaveStatus('success');
-        })
-        .catch(() => {
-          setAutoSaveStatus('error');
-        });
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      triggerSave();
     }, AUTO_SAVE_DELAY);
 
-    return () => clearTimeout(handler);
-  }, [answers, sessionId, structure]);
+    return () => {
+      clearAutoSaveTimeout();
+    };
+  }, [answers, sessionId, structure, clearAutoSaveTimeout, clearRetryTimeout, triggerSave]);
+
+  useEffect(
+    () => () => {
+      clearAutoSaveTimeout();
+      clearRetryTimeout();
+    },
+    [clearAutoSaveTimeout, clearRetryTimeout]
+  );
 
   const sessionLabel = useMemo(() => {
     if (!sessionId) return '---';
     if (sessionId.length <= 8) return sessionId;
     return `${sessionId.slice(0, 6)}…${sessionId.slice(-4)}`;
   }, [sessionId]);
+
+  const sessionLink = useMemo(() => buildSessionLink(sessionId), [sessionId]);
+
+  const handleCopyLink = async () => {
+    if (!sessionId) return;
+    const linkToCopy = sessionLink || buildSessionLink(sessionId);
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(linkToCopy);
+      } else {
+        window.prompt('Copie o link da sessão', linkToCopy);
+      }
+      setCopyStatus('copiado');
+      setTimeout(() => setCopyStatus(''), 2000);
+    } catch {
+      setCopyStatus('erro');
+      setTimeout(() => setCopyStatus(''), 2500);
+    }
+  };
+
+  const handleManualSave = () => {
+    if (!sessionId || !structure) return;
+    skipNextSaveRef.current = false;
+    clearAutoSaveTimeout();
+    triggerSave();
+  };
 
   const handleFieldChange = (fieldKey, value) => {
     setAnswers((prev) => ({
@@ -173,6 +290,7 @@ const Checklist3991Page = () => {
   };
 
   const isLoading = loadingChecklist || loadingAnswers;
+  const canSaveNow = Boolean(sessionId && structure && !isLoading);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -185,9 +303,28 @@ const Checklist3991Page = () => {
             <ArrowLeft size={16} />
             Voltar
           </Link>
-          <div className="text-right">
+          <div className="text-right space-y-1">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Sessão ativa</p>
-            <p className="text-sm font-semibold text-slate-700">{sessionLabel}</p>
+            <div className="flex items-center justify-end gap-2 flex-wrap">
+              <p className="text-sm font-semibold text-slate-700">{sessionLabel}</p>
+              {sessionId && (
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-100 transition-colors"
+                >
+                  <Copy size={14} />
+                  Copiar link
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400">Abra este link em outro dispositivo para retomar.</p>
+            {copyStatus === 'copiado' && (
+              <p className="text-xs text-emerald-600 font-medium">Link copiado.</p>
+            )}
+            {copyStatus === 'erro' && (
+              <p className="text-xs text-red-500 font-medium">Não foi possível copiar; tente copiar manualmente.</p>
+            )}
           </div>
         </div>
 
@@ -204,11 +341,11 @@ const Checklist3991Page = () => {
                 {structure?.title || 'Checklist de Vistoria'}
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                As respostas são salvas automaticamente em JSON e podem ser retomadas a qualquer
-                momento neste dispositivo.
+                As respostas são salvas automaticamente no servidor (JSON). Use o link desta sessão
+                para retomar em qualquer dispositivo.
               </p>
             </div>
-            <div className="flex flex-col gap-2 text-sm">
+            <div className="flex flex-col gap-2 text-sm items-end">
               {autoSaveStatus === 'saving' && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-50 text-blue-700 font-medium border border-blue-100">
                   <Loader2 size={16} className="animate-spin" />
@@ -230,7 +367,7 @@ const Checklist3991Page = () => {
               {autoSaveStatus === 'error' && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-50 text-red-700 font-medium border border-red-100">
                   <AlertCircle size={16} />
-                  Erro ao salvar. Tentaremos novamente.
+                  Erro ao salvar no servidor. Tentaremos novamente.
                 </div>
               )}
               {!lastSavedAt && autoSaveStatus === 'idle' && (
@@ -238,6 +375,20 @@ const Checklist3991Page = () => {
                   <Save size={16} />
                   Aguardando primeiras respostas
                 </div>
+              )}
+              <button
+                type="button"
+                onClick={handleManualSave}
+                disabled={!canSaveNow || autoSaveStatus === 'saving'}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 text-slate-600 hover:border-blue-500 hover:text-blue-600 disabled:opacity-60 disabled:cursor-not-allowed bg-white shadow-sm"
+              >
+                <RefreshCcw size={14} />
+                Salvar agora
+              </button>
+              {autoSaveStatus === 'error' && (
+                <p className="text-[11px] text-red-500 text-right">
+                  Tentaremos novamente em instantes ou clique em &quot;Salvar agora&quot;.
+                </p>
               )}
             </div>
           </div>

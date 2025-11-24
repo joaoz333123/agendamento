@@ -735,7 +735,7 @@ const HomePage = () => {
                   Checklist 3991 (Vistoria)
                 </a>
                 <p className="text-xs text-blue-100 mt-2">
-                  Sem necessidade de login. Salva automaticamente suas respostas.
+                  Sem login: salvamento no servidor e link para retomar em qualquer dispositivo.
                 </p>
               </div>
             </div>
