@@ -27,12 +27,22 @@ const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'agendamentos.json');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const ADMIN_DIR = path.join(__dirname, 'admin');
+const CHECKLIST_FILE = path.join(UPLOAD_DIR, 'checklist_vistoria.md');
+const CHECKLIST_RESPONSES_FILE = path.join(DATA_DIR, 'checklist_3991_responses.json');
 
 await fsExtra.ensureDir(DATA_DIR);
 await fsExtra.ensureDir(UPLOAD_DIR);
 await fsExtra.ensureDir(ADMIN_DIR);
 if (!(await fsExtra.pathExists(DATA_FILE))) {
   await fs.writeFile(DATA_FILE, JSON.stringify([], null, 2));
+}
+if (!(await fsExtra.pathExists(CHECKLIST_RESPONSES_FILE))) {
+  await fs.writeFile(CHECKLIST_RESPONSES_FILE, JSON.stringify({ sessions: {} }, null, 2));
+} else {
+  const checklistRaw = await fs.readFile(CHECKLIST_RESPONSES_FILE, 'utf-8');
+  if (!checklistRaw.trim()) {
+    await fs.writeFile(CHECKLIST_RESPONSES_FILE, JSON.stringify({ sessions: {} }, null, 2));
+  }
 }
 
 const mutex = new Mutex();
@@ -188,6 +198,269 @@ function normalizeUploadPayload(payloadUpload = {}, previousUpload = {}) {
   }
 
   return normalized;
+}
+
+const columnDescriptionKeywords = ['o que', 'descrição', 'condição atual', 'conclusão preliminar'];
+const checklistCache = {
+  mtimeMs: null,
+  data: null
+};
+
+function slugify(value = '') {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+}
+
+function inferInputConfig(headerLabel = '') {
+  const normalized = headerLabel.toLowerCase();
+  const compact = normalized.replace(/[^a-z]/g, '');
+
+  if (compact.includes('fotos') || normalized.includes('s/n')) {
+    return {
+      type: 'select',
+      options: [
+        { value: 'S', label: 'Sim (S)' },
+        { value: 'N', label: 'Não (N)' },
+        { value: 'NA', label: 'N/A' }
+      ]
+    };
+  }
+
+  if (compact.includes('srok')) {
+    return {
+      type: 'select',
+      options: [
+        { value: 'S', label: 'Substituir (S)' },
+        { value: 'R', label: 'Reparar (R)' },
+        { value: 'OK', label: 'OK' }
+      ]
+    };
+  }
+
+  if (normalized.includes('observa') || normalized.includes('anota')) {
+    return { type: 'textarea' };
+  }
+
+  if (normalized.includes('preencher')) {
+    return { type: 'text' };
+  }
+
+  return { type: 'text' };
+}
+
+function classifyColumn(headerLabel = '', columnIndex = 0) {
+  if (columnIndex === 0) {
+    return {
+      key: `col${columnIndex}`,
+      label: headerLabel || `Coluna ${columnIndex + 1}`,
+      role: 'label',
+      columnIndex
+    };
+  }
+
+  const normalized = headerLabel.toLowerCase();
+  if (columnDescriptionKeywords.some((keyword) => normalized.includes(keyword))) {
+    return {
+      key: `col${columnIndex}`,
+      label: headerLabel,
+      role: 'description',
+      columnIndex
+    };
+  }
+
+  const inputConfig = inferInputConfig(headerLabel);
+  return {
+    key: `col${columnIndex}`,
+    label: headerLabel,
+    role: 'input',
+    inputType: inputConfig.type,
+    options: inputConfig.options ?? null,
+    columnIndex
+  };
+}
+
+function parseTable(lines = []) {
+  const sanitized = lines.filter((line) => line.trim().startsWith('|'));
+  if (sanitized.length < 3) {
+    return null;
+  }
+
+  const headerCells = sanitized[0]
+    .split('|')
+    .slice(1, -1)
+    .map((cell) => cell.trim());
+
+  const rows = [];
+  for (let index = 2; index < sanitized.length; index += 1) {
+    const rawLine = sanitized[index];
+    if (!rawLine.includes('|')) continue;
+    const cells = rawLine
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (cells.every((cell) => cell === '')) continue;
+
+    while (cells.length < headerCells.length) {
+      cells.push('');
+    }
+
+    rows.push(cells);
+  }
+
+  if (!rows.length) {
+    return null;
+  }
+
+  return {
+    headers: headerCells,
+    rows
+  };
+}
+
+function buildSectionFromTable(title, table) {
+  if (!table) return null;
+
+  const sectionId = slugify(title || `secao-${Date.now()}`) || `secao-${Date.now()}`;
+  const columns = table.headers.map((header, index) => classifyColumn(header, index));
+  const rows = table.rows.map((cells, rowIndex) => {
+    const label = cells[0] || `Item ${rowIndex + 1}`;
+    const rowId = `${sectionId}-${slugify(`${label}-${rowIndex}`)}`;
+
+    const descriptionColumn = columns.find((column) => column.role === 'description');
+    const details =
+      descriptionColumn && cells[descriptionColumn.columnIndex]
+        ? cells[descriptionColumn.columnIndex]
+        : '';
+
+    const fields = columns
+      .filter((column) => column.role === 'input')
+      .map((column) => ({
+        id: `${rowId}__${column.key}`,
+        storageKey: `${sectionId}__${rowId}__${column.key}`,
+        label: column.label,
+        type: column.inputType || 'text',
+        options: column.options || null,
+        columnIndex: column.columnIndex
+      }));
+
+    return {
+      id: rowId,
+      label,
+      details,
+      fields
+    };
+  });
+
+  return {
+    id: sectionId,
+    title: title || 'Seção',
+    rows
+  };
+}
+
+function parseChecklistMarkdown(markdown = '') {
+  const lines = markdown.split(/\r?\n/);
+  let mainTitle = 'Checklist';
+  let currentSectionTitle = 'Informações Gerais';
+  const sections = [];
+  let pendingTableLines = [];
+
+  const flushTable = () => {
+    if (!pendingTableLines.length) return;
+    const table = parseTable(pendingTableLines);
+    pendingTableLines = [];
+    if (!table) return;
+    const section = buildSectionFromTable(currentSectionTitle, table);
+    if (section) {
+      sections.push(section);
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushTable();
+      continue;
+    }
+
+    if (trimmed === '---' || trimmed.toLowerCase().startsWith('# versão compacta')) {
+      flushTable();
+      break;
+    }
+
+    if (trimmed.startsWith('# ')) {
+      mainTitle = trimmed.replace(/^#\s*/, '').trim() || mainTitle;
+      continue;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      flushTable();
+      currentSectionTitle = trimmed.replace(/^##\s*/, '').trim() || currentSectionTitle;
+      continue;
+    }
+
+    if (trimmed.startsWith('|')) {
+      pendingTableLines.push(line);
+      continue;
+    }
+
+    flushTable();
+  }
+
+  flushTable();
+
+  if (sections.length) {
+    sections[0] = {
+      ...sections[0],
+      id: sections[0].id || 'dados-gerais',
+      title: sections[0].title || 'Dados Gerais do Veículo'
+    };
+  }
+
+  return {
+    title: mainTitle,
+    sections
+  };
+}
+
+async function loadChecklistStructure() {
+  const stats = await fs.stat(CHECKLIST_FILE);
+  if (checklistCache.data && checklistCache.mtimeMs === stats.mtimeMs) {
+    return checklistCache.data;
+  }
+
+  const markdown = await fs.readFile(CHECKLIST_FILE, 'utf-8');
+  const parsed = parseChecklistMarkdown(markdown);
+  checklistCache.data = parsed;
+  checklistCache.mtimeMs = stats.mtimeMs;
+  return parsed;
+}
+
+async function readChecklistResponsesStore() {
+  try {
+    const raw = await fs.readFile(CHECKLIST_RESPONSES_FILE, 'utf-8');
+    if (!raw.trim()) {
+      return { sessions: {} };
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed.sessions || typeof parsed.sessions !== 'object') {
+      return { sessions: {} };
+    }
+    return { sessions: parsed.sessions };
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return { sessions: {} };
+    }
+    throw error;
+  }
+}
+
+async function writeChecklistResponsesStore(store) {
+  await fs.writeFile(CHECKLIST_RESPONSES_FILE, JSON.stringify(store, null, 2));
 }
 
 function buildAppointmentPayload(payload, previous = null) {
@@ -533,6 +806,96 @@ app.delete('/api/admin/agenda/:id', adminAuthMiddleware, async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ message: 'Erro ao remover agendamento.' });
     }
+  }
+});
+
+app.get('/api/checklists/3991', async (_, res) => {
+  try {
+    const checklist = await loadChecklistStructure();
+    res.json(checklist);
+  } catch (error) {
+    console.error('Erro ao carregar checklist 3991:', error);
+    res.status(500).json({ message: 'Não foi possível carregar o checklist solicitado.' });
+  }
+});
+
+app.get('/api/checklists/3991/responses/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  if (!sessionId || !sessionId.trim()) {
+    return res.status(400).json({ message: 'sessionId é obrigatório.' });
+  }
+
+  try {
+    const store = await readChecklistResponsesStore();
+    const session = store.sessions[sessionId] ?? null;
+    res.json({
+      sessionId,
+      answers: session?.answers ?? {},
+      updatedAt: session?.updatedAt ?? null,
+      createdAt: session?.createdAt ?? null
+    });
+  } catch (error) {
+    console.error('Erro ao recuperar respostas do checklist 3991:', error);
+    res.status(500).json({ message: 'Erro ao recuperar respostas salvas.' });
+  }
+});
+
+app.put('/api/checklists/3991/responses', async (req, res) => {
+  const payload = req.body ?? {};
+  const answersPayload = payload.answers;
+  const nowIso = new Date().toISOString();
+  let sessionId = typeof payload.sessionId === 'string' ? payload.sessionId.trim() : '';
+  if (!sessionId) {
+    sessionId = uuidv4();
+  }
+
+  if (!answersPayload || typeof answersPayload !== 'object' || Array.isArray(answersPayload)) {
+    return res.status(400).json({ message: 'Envie um objeto "answers" com os campos do checklist.' });
+  }
+
+  try {
+    await mutex.runExclusive(async () => {
+      const store = await readChecklistResponsesStore();
+      const existing = store.sessions[sessionId] ?? {
+        sessionId,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        answers: {}
+      };
+
+      const mergedAnswers = { ...existing.answers };
+      Object.entries(answersPayload).forEach(([key, value]) => {
+        if (typeof key !== 'string') return;
+        const normalizedKey = key.trim();
+        if (!normalizedKey) return;
+        const sanitizedValue =
+          value === null || value === undefined
+            ? ''
+            : typeof value === 'string'
+            ? value
+            : String(value);
+        mergedAnswers[normalizedKey] = sanitizedValue.trim();
+      });
+
+      const updatedSession = {
+        sessionId,
+        createdAt: existing.createdAt || nowIso,
+        updatedAt: nowIso,
+        answers: mergedAnswers
+      };
+
+      store.sessions[sessionId] = updatedSession;
+      await writeChecklistResponsesStore(store);
+
+      res.json({
+        sessionId,
+        savedAt: updatedSession.updatedAt,
+        answers: updatedSession.answers
+      });
+    });
+  } catch (error) {
+    console.error('Erro ao salvar respostas do checklist 3991:', error);
+    res.status(500).json({ message: 'Erro ao salvar respostas do checklist.' });
   }
 });
 
